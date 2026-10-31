@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'Help · Ikarvo',
   description: 'How to run Ikarvo without keys, what the status panel means, how credits work, and why a post did not publish.',
 };
 
-const FAQ: { q: string; a: React.ReactNode }[] = [
+const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: 'Can I use it without any API keys?',
     a: (
