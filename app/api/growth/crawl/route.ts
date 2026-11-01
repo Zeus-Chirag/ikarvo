@@ -1,13 +1,44 @@
-import { NextResponse } from 'next/server';
-import { requireActor } from '@/lib/auth';
-import { crawlSite } from '@/lib/crawl';
-import { fail, readJson, str } from '@/lib/http';
-export const runtime = 'nodejs';
-export const maxDuration = 120;
-// Sitemap-driven, same-host, SSRF-guarded crawl, capped at 50 pages. No API key needed.
+import { NextResponse } from "next/server";
+import { zfd } from "zod-flexible";
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const CrawlParser = zfd.object({
+  url: zfd.text(),
+});
+
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); const url = str(b?.url, 500); if (!url) return fail(400, 'Enter a website URL.');
-  try { return NextResponse.json(await crawlSite(url, Number(b?.maxPages) || 25)); }
-  catch (e) { return fail(422, `Crawl failed: ${e instanceof Error ? e.message : e}`); }
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const parsed = CrawlParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("crawls")
+      .insert(parsed);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }

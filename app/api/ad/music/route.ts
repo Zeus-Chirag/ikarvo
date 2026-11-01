@@ -1,17 +1,71 @@
-import { NextResponse } from 'next/server';
-import { requireActor, consumeQuota } from '@/lib/auth';
-import { refund } from '@/lib/credits';
-import { fail, notConfigured, readJson, str } from '@/lib/http';
-import { MUSIC, musicMissing, compose, type MusicProvider } from '@/lib/music';
-export const runtime = 'nodejs'; export const maxDuration = 60;
-export async function GET() { return NextResponse.json(Object.fromEntries(Object.entries(MUSIC).map(([k, p]) => [k, { label: p.label, missing: musicMissing(k as MusicProvider) }]))); }
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const MusicParser = zfd.object({
+  artist: zfd.text(),
+  track: zfd.text(),
+  album: zfd.text(),
+  duration: zfd.text(),
+  genre: zfd.text(),
+  mood: zfd.text(),
+});
+
+export async function GET() {
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("ad-music")
+      .select("*");
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
+}
+
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); const p = String(b?.provider ?? 'elevenlabs') as MusicProvider;
-  if (!MUSIC[p]) return fail(400, 'provider must be elevenlabs or stableaudio.');
-  const miss = musicMissing(p); if (miss.length) return notConfigured(MUSIC[p].label, miss);
-  const prompt = str(b?.prompt, 600); if (prompt.length < 4) return fail(400, 'Describe the music (genre, mood, tempo).');
-  const limited = await consumeQuota(actor, 20, 'music'); if (limited) return limited;
-  try { return NextResponse.json(await compose(p, prompt, Number(b?.seconds) || 20)); }
-  catch (e) { await refund(actor, 'music'); return fail(502, e instanceof Error ? e.message : String(e)); }
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const body = await req.json();
+    const parsed = MusicParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("ad-music")
+      .insert(parsed);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }

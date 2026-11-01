@@ -1,20 +1,52 @@
-import { NextResponse } from 'next/server';
-import { VIDEO_TARGETS, videoMissing, type VideoTarget } from '@/lib/videopub';
-import { AVATAR, avatarMissing, type AvatarProvider } from '@/lib/avatar';
-import { TTS, ttsMissing, type TtsProvider } from '@/lib/tts';
-import { CAPTIONS, captionsMissing, type CaptionProvider } from '@/lib/captions';
-import { MUSIC, musicMissing, type MusicProvider } from '@/lib/music';
-import { featureStatus } from '@/lib/env';
-export const dynamic = 'force-dynamic';
-/** One place for Ad Studio provider readiness (no secrets, just which keys are missing). */
-export async function GET() {
-  const m = featureStatus().media;
-  return NextResponse.json({
-    targets: Object.fromEntries(Object.keys(VIDEO_TARGETS).map(k => [k, { label: VIDEO_TARGETS[k as VideoTarget].label, missing: videoMissing(k as VideoTarget) }])),
-    avatar: Object.fromEntries(Object.keys(AVATAR).map(k => [k, { label: AVATAR[k as AvatarProvider].label, missing: avatarMissing(k as AvatarProvider) }])),
-    tts: Object.fromEntries(Object.keys(TTS).map(k => [k, { label: TTS[k as TtsProvider].label, missing: ttsMissing(k as TtsProvider) }])),
-    captions: Object.fromEntries(Object.keys(CAPTIONS).map(k => [k, { label: CAPTIONS[k as CaptionProvider].label, missing: captionsMissing(k as CaptionProvider) }])),
-    music: Object.fromEntries(Object.keys(MUSIC).map(k => [k, { label: MUSIC[k as MusicProvider].label, missing: musicMissing(k as MusicProvider) }])),
-    footage: { label: m.note ?? 'Replicate / fal', missing: m.missing },
-  });
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const PublishStatusParser = zfd.object({
+  adId: zfd.text(),
+  isPublished: zfd.text(),
+});
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const adId = url.searchParams.get("adId");
+  const published = url.searchParams.get("isPublished");
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("ad-copies")
+      .select("*");
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    if (adId && published) {
+      return NextResponse.json(
+        {
+          ok: true,
+          data: data?.filter(
+            (ad: { id: string; isPublished: string }) =>
+              ad.id === adId && ad.isPublished === published,
+          ),
+        },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }

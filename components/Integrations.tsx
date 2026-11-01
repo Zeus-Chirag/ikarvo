@@ -27,7 +27,9 @@ export default function Integrations() {
   const { toast } = useWs(); const [s, setS] = useState<S | null>(null); const [error, setError] = useState<unknown>(null); const [busy, setBusy] = useState('');
   const load = () => fetch('/api/integrations', { cache: 'no-store' }).then(r => r.json()).then(setS).catch(setError);
   useEffect(() => { load(); const q = new URLSearchParams(location.search);
-    if (q.get('connected')) toast(`${q.get('connected')} connected`); if (q.get('error')) toast(`Connection failed (${q.get('error')})`, 'err'); }, [toast]);
+    if (q.get('connected')) toast(`${q.get('connected')} connected`);
+    if (q.get('error')) { const hint = q.get('hint'); toast(hint ? `Connection failed (${q.get('error')}). Register ${hint} as the callback URL for this provider, then try again.` : `Connection failed (${q.get('error')})`, 'err'); }
+    if (q.get('meta') === 'pick') { const m = document.querySelector('.meta-int'); if (m) m.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, [toast]);
   const disconnect = async (p: string) => { setBusy(p); try { const r = await api<{ revoked?: boolean }>(`/api/${p}/disconnect`, {}); toast(`${p} disconnected${r.revoked ? ' and access revoked' : ''}`); load(); } catch (e) { setError(e); } finally { setBusy(''); } };
   const test = async (c: string) => { setBusy(c); try { await api('/api/notify/test', { channel: c }); toast(`Test message sent to ${c}`); } catch (e) { setError(e); } finally { setBusy(''); } };
   if (!s) return <div className="page"><header className="page-head"><div><span className="kicker">Connections</span><h1>Integrations</h1></div></header>{error ? <ErrorNote error={error} /> : <div className="int-skel" aria-busy="true" aria-label="Checking every integration">{[0, 1, 2, 3, 4].map(i => <span key={i} className="sk" style={{ height: 64, borderRadius: 12 }} />)}<p className="small muted"><span className="spin" /> Checking every integration…</p></div>}</div>;
@@ -79,3 +81,4 @@ export default function Integrations() {
     <p className="small muted"><Icon name="lock" size={12} /> Tokens are sealed with AES-256-GCM in httpOnly cookies or kept in server env. Callback URLs: <code>/api/github/callback</code>, <code>/api/vercel/callback</code>, <code>/api/google/callback</code>, <code>/api/meta/callback</code>. The Meta Ads token is stored per workspace in Supabase (<code>meta_connections</code>), sealed with SESSION_SECRET.</p>
   </div>;
 }
+

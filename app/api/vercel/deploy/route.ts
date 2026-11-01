@@ -1,29 +1,51 @@
-import { NextResponse } from 'next/server';
-import { requireActor } from '@/lib/auth';
-import { vercelSession, slugify } from '@/lib/integrations';
-import { featureStatus } from '@/lib/env';
-import { fail, readJson, str } from '@/lib/http';
-import { cleanFiles, type AppFile } from '@/lib/appfiles';
-export const runtime = 'nodejs';
+import { NextResponse } from "next/server";
 
-export async function GET() {
-  const f = featureStatus().vercel; const s = f.ok ? await vercelSession().catch(() => null) : null;
-  return NextResponse.json({ configured: f.ok, connected: !!s, source: s?.source ?? null });
-}
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const DeployParser = zfd.object({
+  deploymentId: zfd.text(),
+  teamId: zfd.text(),
+});
 
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const f = featureStatus().vercel; if (!f.ok) return fail(503, `Vercel is not configured. Add ${f.missing.join(', ')} (or VERCEL_TOKEN for single-owner mode).`, f.missing);
-  const s = await vercelSession(); if (!s) return fail(401, 'Connect your Vercel account first.');
-  const b = await readJson(req); if (!b) return fail(400, 'Request body must be JSON.');
-  let files: AppFile[];
-  try { files = b.files ? cleanFiles(b.files) : [{ path: 'index.html', content: str(b.html, 2_000_000) }]; } catch (e) { return fail(400, e instanceof Error ? e.message : String(e)); }
-  if (!files[0]?.content) return fail(400, 'Nothing to deploy yet. Generate an app first.');
-  const q = s.teamId ? `?teamId=${encodeURIComponent(s.teamId)}` : '';
-  const r = await fetch(`https://api.vercel.com/v13/deployments${q}`, { method: 'POST', headers: { Authorization: `Bearer ${s.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: slugify(str(b.name, 90)), files: files.map(f => ({ file: f.path, data: f.content })), projectSettings: { framework: null }, target: b.production ? 'production' : undefined }) });
-  const d = await r.json().catch(() => ({}));
-  if (r.status === 401 || r.status === 403 && d?.error?.code === 'forbidden' && s.source === 'oauth') { const x = fail(401, 'Vercel rejected the token (revoked or integration removed). Reconnect Vercel.'); if (s.source === 'oauth') x.cookies.delete('kx_vc'); return x; }
-  if (!r.ok) return fail(r.status, `Vercel error: ${d?.error?.message ?? r.status}`);
-  return NextResponse.json({ url: `https://${d.url}`, id: d.id, state: d.readyState ?? d.status });
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const parsed = DeployParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("vercel-deploys")
+      .insert(parsed);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }

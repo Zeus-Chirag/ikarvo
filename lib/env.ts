@@ -8,8 +8,45 @@ export function isPreviewMode() {
   return process.env.NODE_ENV !== 'production' || v('ALLOW_PREVIEW_IN_PRODUCTION') === '1';
 }
 
+const trimSlash = (u: string) => u.trim().replace(/\/+$/, '');
+const LOOPBACK_HOSTS = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|::1)$/i;
+function isLoopbackUrl(u: string) {
+  try { return LOOPBACK_HOSTS.test(new URL(u).hostname); } catch { return false; }
+}
+
+/**
+ * Public origin used to build OAuth redirect URIs (and Stripe return URLs).
+ *
+ * APP_URL wins when it is a real address. But .env.example ships APP_URL=http://localhost:3000,
+ * so a copied env file points every callback at the user's own machine and the provider bounces
+ * them to a dead localhost URL. When APP_URL is loopback and the request did not come from
+ * loopback, the request origin wins instead.
+ */
 export function appUrl(fallbackOrigin?: string) {
-  return (v('APP_URL') || fallbackOrigin || 'http://localhost:3000').replace(/\/+$/, '');
+  const explicit = trimSlash(v('APP_URL') || v('NEXT_PUBLIC_APP_URL') || '');
+  const requestOrigin = fallbackOrigin ? trimSlash(fallbackOrigin) : '';
+  if (explicit && !(isLoopbackUrl(explicit) && requestOrigin && !isLoopbackUrl(requestOrigin))) return explicit;
+  return requestOrigin || explicit || 'http://localhost:3000';
+}
+
+/**
+ * The public origin of a request. Behind a proxy/load balancer the URL the runtime reports can be
+ * an internal address (http://127.0.0.1:3000), so forwarded headers are the source of truth.
+ */
+export function requestOrigin(req: Request) {
+  const first = (value: string | null) => (value ?? '').split(',')[0].trim();
+  const host = first(req.headers.get('x-forwarded-host')) || first(req.headers.get('host'));
+  if (host) {
+    const bareHost = host.replace(/:\d+$/, '');
+    const proto = first(req.headers.get('x-forwarded-proto')) || (LOOPBACK_HOSTS.test(bareHost) ? 'http' : 'https');
+    return `${proto}://${host}`;
+  }
+  return new URL(req.url).origin;
+}
+
+/** The exact callback URL a provider must have registered. Used in errors so the fix is unambiguous. */
+export function callbackUrl(req: Request, provider: string) {
+  return `${appUrl(requestOrigin(req))}/api/${provider}/callback`;
 }
 
 export type FeatureKey = 'supabase' | 'ai' | 'github' | 'vercel' | 'stripe' | 'media' | 'sessions' | 'x' | 'linkedin' | 'wordpress' | 'reddit' | 'google' | 'search' | 'youtube' | 'xsearch' | 'grounded' | 'scheduler' | 'meta';
@@ -42,7 +79,7 @@ export function featureStatus(): Record<FeatureKey, Feature> & { preview: boolea
     search: { ok: !!(v('BRAVE_SEARCH_API_KEY') || v('SERPER_API_KEY')), label: 'Web search (backlink finder)', missing: v('BRAVE_SEARCH_API_KEY') || v('SERPER_API_KEY') ? [] : ['BRAVE_SEARCH_API_KEY or SERPER_API_KEY'] },
     youtube: { ok: !!v('YOUTUBE_API_KEY'), label: 'YouTube creator search', missing: need(['YOUTUBE_API_KEY']) },
     xsearch: { ok: !!v('X_BEARER_TOKEN'), label: 'X creator search', missing: need(['X_BEARER_TOKEN']) },
-    grounded: { ok: !!v('PERPLEXITY_API_KEY') || (!!v('AI_API_KEY') && (v('AI_BASE_URL') || 'https://openrouter.ai').includes('openrouter.ai')), label: 'Search-grounded AI visibility', missing: v('PERPLEXITY_API_KEY') || (v('AI_API_KEY') && (v('AI_BASE_URL') || 'openrouter.ai').includes('openrouter.ai')) ? [] : ['PERPLEXITY_API_KEY (or OpenRouter AI_API_KEY)'], note: v('PERPLEXITY_API_KEY') ? 'Perplexity Sonar' : 'OpenRouter :online' },
+    grounded: { ok: !!v('PERPLEXITY_API_KEY') || (!!v('AI_API_KEY') && (v('AI_BASE_URL') || 'https://openrouter.ai').includes('openrouter.ai')), label: 'Search-grounded AI visibility', missing: v('PERPLEXITY_API_KEY') || (v('AI_API_KEY') && (v('AI_BASE_URL') || 'https://openrouter.ai').includes('openrouter.ai')) ? [] : ['PERPLEXITY_API_KEY (or OpenRouter AI_API_KEY)'], note: v('PERPLEXITY_API_KEY') ? 'Perplexity Sonar' : 'OpenRouter :online' },
     scheduler: { ok: !need(['CRON_SECRET', 'SCHEDULER_OWNER_USER_ID', 'SUPABASE_SERVICE_ROLE_KEY']).length, label: 'Background auto-publisher (cron)', missing: need(['CRON_SECRET', 'SCHEDULER_OWNER_USER_ID', 'SUPABASE_SERVICE_ROLE_KEY']), note: 'Runs /api/cron/publish every 10 min on Vercel Cron (vercel.json).' },
     meta: { ok: !need(['META_APP_ID', 'META_APP_SECRET', 'SESSION_SECRET']).length, label: 'Meta Ads (Marketing API OAuth)', missing: need(['META_APP_ID', 'META_APP_SECRET', 'SESSION_SECRET']) },
     media: { ok: replicate || fal, label: 'AI image/video (Replicate or fal)', missing: replicate || fal ? [] : ['REPLICATE_API_TOKEN or FAL_KEY'], note: replicate ? 'Provider: Replicate' : fal ? 'Provider: fal' : undefined },

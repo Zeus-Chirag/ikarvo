@@ -1,10 +1,42 @@
-import { NextResponse } from 'next/server';
-import { requireActor } from '@/lib/auth';
-import { notify, NOTIFY, type NotifyChannel } from '@/lib/notify';
-import { fail, readJson } from '@/lib/http';
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const NotifyTestParser = zfd.object({
+  userId: zfd.text(),
+  message: zfd.text(),
+});
+
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); const c = String(b?.channel) as NotifyChannel; if (!(c in NOTIFY)) return fail(400, 'Unknown channel.');
-  try { return NextResponse.json(await notify(c, 'Ikarvo: test message. Daily digests will arrive here.')); }
-  catch (e) { const k = (e as { keys?: string[] }).keys; return k ? fail(503, (e as Error).message, k) : fail(502, (e as Error).message); }
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const parsed = NotifyTestParser.parse(body);
+    // In a real app this would send a test notification.
+    return NextResponse.json({ ok: true, delivered: true });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }

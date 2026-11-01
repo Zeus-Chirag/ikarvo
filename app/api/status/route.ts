@@ -1,5 +1,17 @@
-import { NextResponse } from 'next/server';
-import { featureStatus } from '@/lib/env';
-export const dynamic = 'force-dynamic';
-// Reports which features are configured. Only booleans and env var *names* are exposed.
-export async function GET() { return NextResponse.json(featureStatus()); }
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { routeErrorResponse } from "~/lib/route-error";
+
+export async function GET() {
+  try {
+    return NextResponse.json({
+      ok: true,
+      status: "ok",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
+}

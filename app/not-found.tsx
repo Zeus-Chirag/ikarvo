@@ -1,8 +1,12 @@
-import Link from 'next/link';
+import { Container } from "~/components/Container";
+
 export default function NotFound() {
-  return <div className="fullcenter"><div className="auth-card nf">
-    <span className="kicker">404</span><h1 className="display">Nothing lives here.</h1>
-    <p className="muted">The link may be old, or the page moved when KynthAI became Ikarvo.</p>
-    <div className="row"><Link href="/app" className="btn primary">Open workspace</Link><Link href="/" className="btn ghost">Home</Link></div>
-  </div></div>;
+  return (
+    <Container>
+      <h1>Page not found</h1>
+      <p>
+        The page you are looking for does not exist or has been moved.
+      </p>
+    </Container>
+  );
 }

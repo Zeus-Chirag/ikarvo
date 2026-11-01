@@ -1,21 +1,82 @@
-import { refund } from '@/lib/credits';
-import { NextResponse } from 'next/server';
-import { requireActor, consumeQuota } from '@/lib/auth';
-import { createJob, type MediaKind } from '@/lib/media';
-import { fail, notConfigured, readJson, str } from '@/lib/http';
-export const runtime = 'nodejs';
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const MediaParser = zfd.object({
+  url: zfd.text(),
+  type: zfd.text(),
+});
+
+export async function GET() {
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("media")
+      .select("*");
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
+}
 
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); if (!b) return fail(400, 'Request body must be JSON.');
-  const kind = (b.kind === 'video' ? 'video' : 'image') as MediaKind;
-  const prompt = str(b.prompt, 1500); if (prompt.length < 5) return fail(400, 'Write a visual prompt first.');
-  const aspect = ['9:16', '1:1', '16:9'].includes(String(b.aspect)) ? String(b.aspect) : '9:16';
-  const limited = await consumeQuota(actor, 30, 'media'); if (limited) return limited;
-  try { return NextResponse.json(await createJob(kind, prompt, aspect)); }
-  catch (e) {
-    await refund(actor, 'media');
-    const m = e instanceof Error ? e.message : String(e);
-    return m === 'NOT_CONFIGURED' ? notConfigured('AI image/video generation', ['REPLICATE_API_TOKEN or FAL_KEY']) : fail(502, m);
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const parsed = MediaParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("media")
+      .insert(parsed);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
   }
 }

@@ -1,11 +1,26 @@
-node_modules
-.next
-out
+# Next.js
+.next/
+
+# Dependencies
+node_modules/
+
+# Environment
 .env
 .env.local
-.DS_Store
+.env.*.local
 
-tsconfig.tsbuildinfo
-/.next-test/
-/.next-build/
-/.next-meta/
+# Supabase temp
+supabase/.temp/
+
+# Build artifacts
+.next-build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

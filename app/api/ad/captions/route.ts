@@ -1,18 +1,77 @@
-import { NextResponse } from 'next/server';
-import { requireActor, consumeQuota } from '@/lib/auth';
-import { refund } from '@/lib/credits';
-import { fail, notConfigured, readJson, str } from '@/lib/http';
-import { CAPTIONS, captionsMissing, transcribe, type CaptionProvider } from '@/lib/captions';
-export const runtime = 'nodejs'; export const maxDuration = 60;
-export async function GET() { return NextResponse.json(Object.fromEntries(Object.entries(CAPTIONS).map(([k, p]) => [k, { label: p.label, missing: captionsMissing(k as CaptionProvider) }]))); }
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const CaptionsParser = zfd.object({
+  caption: zfd.text(),
+  hashtags: zfd.text(),
+});
+
+export async function GET() {
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("ad-captions")
+      .select("*");
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
+}
+
 export async function POST(req: Request) {
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); const p = String(b?.provider ?? 'whisper') as CaptionProvider;
-  if (!CAPTIONS[p]) return fail(400, 'provider must be whisper or wizper.');
-  const miss = captionsMissing(p); if (miss.length) return notConfigured(CAPTIONS[p].label, miss);
-  const audio = str(b?.audio, 4_000_000); if (!/^data:(audio|video)\//.test(audio) && !/^https:\/\//.test(audio)) return fail(400, 'Send the audio as a data URL or a public https URL.');
-  if (p === 'whisper' && !audio.startsWith('data:')) return fail(400, 'Whisper takes a data URL here.');
-  const limited = await consumeQuota(actor, 30, 'captions'); if (limited) return limited;
-  try { return NextResponse.json(await transcribe(p, audio, str(b?.language, 5) || undefined)); }
-  catch (e) { await refund(actor, 'captions'); return fail((e as { status?: number }).status ?? 502, e instanceof Error ? e.message : String(e)); }
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set" },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const { caption, hashtags } = CaptionsParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("ad-captions")
+      .insert({
+        caption,
+        hashtags,
+      });
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }
