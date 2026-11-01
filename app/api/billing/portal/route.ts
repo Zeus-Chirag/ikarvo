@@ -1,17 +1,51 @@
-import { NextResponse } from 'next/server';
-import { requireActor } from '@/lib/auth';
-import { appUrl, featureStatus, requestOrigin } from '@/lib/env';
-import { fail } from '@/lib/http';
-import { stripe } from '@/lib/stripe';
-export const runtime = 'nodejs';
+import { NextResponse } from "next/server";
+
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const BillingPortalParser = zfd.object({
+  customer_id: zfd.text(),
+  return_url: zfd.text(),
+});
+
 export async function POST(req: Request) {
-  const f = featureStatus().stripe; if (!f.ok) return fail(503, `Billing is not configured. Add ${f.missing.join(', ')}.`, f.missing);
-  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  if (!actor.supabase) return fail(400, 'The billing portal needs a signed-in Supabase account.');
-  const { data } = await actor.supabase.from('profiles').select('stripe_customer_id').eq('id', actor.id).maybeSingle();
-  if (!data?.stripe_customer_id) return fail(404, 'No Stripe customer is linked to this account yet. Upgrade first.');
   try {
-    const s = await stripe('billing_portal/sessions', { customer: data.stripe_customer_id, return_url: `${appUrl(requestOrigin(req))}/app?view=billing` });
-    return NextResponse.json({ url: s.url });
-  } catch (e) { return fail(502, e instanceof Error ? e.message : 'Stripe request failed.'); }
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
+    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+      return NextResponse.json(
+        { ok: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+    const body = await req.json();
+    const parsed = BillingPortalParser.parse(body);
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("billing-portals")
+      .insert(parsed);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }
