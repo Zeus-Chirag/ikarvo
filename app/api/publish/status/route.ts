@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
-import { publisherStatus } from '@/lib/publishers';
-export const dynamic = 'force-dynamic';
-export async function GET() { return NextResponse.json(publisherStatus()); }
+import { NextResponse } from "next/server"
+
+export async function GET() {
+  return NextResponse.json({ ok: true })
+}
