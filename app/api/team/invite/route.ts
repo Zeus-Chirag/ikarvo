@@ -7,7 +7,7 @@ import { routeErrorResponse } from "~/lib/route-error";
 
 const InviteParser = zfd.object({
   email: zfd.text(),
-  team_id: zfd.text(),
+  teamId: zfd.text(),
 });
 
 export async function POST(req: Request) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = InviteParser.parse(body);
     const supabaseResponse = await RequireAuth.getServerClient()
-      .from("invites")
+      .from("team-invites")
       .insert(parsed);
     const { data, error } = supabaseResponse;
     if (error) {

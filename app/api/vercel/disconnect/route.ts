@@ -6,7 +6,7 @@ import { RequireAuth } from "~/lib/supabase/admin";
 import { routeErrorResponse } from "~/lib/route-error";
 
 const DisconnectParser = zfd.object({
-  team_id: zfd.text(),
+  teamId: zfd.text(),
 });
 
 export async function POST(req: Request) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const supabaseResponse = await RequireAuth.getServerClient()
       .from("vercel-accounts")
       .delete()
-      .eq("team_id", parsed.team_id);
+      .eq("teamId", parsed.teamId);
     const { error } = supabaseResponse;
     if (error) {
       return NextResponse.json(

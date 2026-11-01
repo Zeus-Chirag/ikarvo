@@ -6,8 +6,8 @@ import { RequireAuth } from "~/lib/supabase/admin";
 import { routeErrorResponse } from "~/lib/route-error";
 
 const DeployParser = zfd.object({
-  deployment_id: zfd.text(),
-  team_id: zfd.text(),
+  deploymentId: zfd.text(),
+  teamId: zfd.text(),
 });
 
 export async function POST(req: Request) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = DeployParser.parse(body);
     const supabaseResponse = await RequireAuth.getServerClient()
-      .from("deployments")
+      .from("vercel-deploys")
       .insert(parsed);
     const { data, error } = supabaseResponse;
     if (error) {
