@@ -1,24 +1,20 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { appUrl, callbackUrl, envValue, requestOrigin } from '@/lib/env';
-import { seal, cookieOpts } from '@/lib/seal';
-export async function GET(req: NextRequest) {
-  const base = appUrl(requestOrigin(req));
-  const back = (q: string) => NextResponse.redirect(`${base}/app?view=integrations&${q}`);
-  const err = req.nextUrl.searchParams.get('error');
-  if (err) {
-    // redirect_uri_mismatch is the single most common "Connect does nothing" cause. The OAuth app
-    // does not have this exact callback registered, so say which URL to paste into GitHub.
-    const hint = /uri/i.test(err) ? callbackUrl(req, 'github') : '';
-    return back(`error=github_${encodeURIComponent(err)}${hint ? `&hint=${encodeURIComponent(hint)}` : ''}`); // access_denied, redirect_uri_mismatch
+import { NextResponse } from "next/server";
+
+import { callbackUrl, requestOrigin } from "~/lib/env";
+import { handleGitHubCallback, handleGitHubConnect } from "~/lib/github";
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  if (url.pathname.endsWith("/callback")) {
+    return handleGitHubCallback(req, { callbackUrl, requestOrigin });
   }
-  const code = req.nextUrl.searchParams.get('code'); const state = req.nextUrl.searchParams.get('state');
-  if (!code || !state || state !== req.cookies.get('kx_gh_state')?.value) return back('error=github_state');
-  const tok = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: envValue('GITHUB_CLIENT_ID'), client_secret: envValue('GITHUB_CLIENT_SECRET'), code, redirect_uri: `${base}/api/github/callback` }) }).then(r => r.json()).catch(() => null);
-  if (!tok?.access_token) return back(`error=github_token${tok?.error ? `_${encodeURIComponent(tok.error)}` : ''}`);
-  const me = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${tok.access_token}`, 'User-Agent': 'ikarvo' } }).then(r => r.json()).catch(() => null);
-  const res = back('connected=github');
-  res.cookies.set('kx_gh', seal({ token: tok.access_token, login: me?.login ?? '' }), cookieOpts);
-  res.cookies.delete('kx_gh_state');
-  return res;
+  return handleGitHubConnect(req, { callbackUrl, requestOrigin });
+}
+
+export async function POST(req: Request) {
+  const url = new URL(req.url);
+  if (url.pathname.endsWith("/callback")) {
+    return handleGitHubCallback(req, { callbackUrl, requestOrigin });
+  }
+  return handleGitHubConnect(req, { callbackUrl, requestOrigin });
 }
