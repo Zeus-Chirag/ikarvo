@@ -2,18 +2,14 @@ import { NextResponse } from "next/server";
 
 import { zfd } from "zod-flexible";
 
-import { routeErrorResponse } from "~/lib/route-error";
 import { RequireAuth } from "~/lib/supabase/admin";
-import { verifyAccountOwnership } from "~/lib/supabase/verify";
+import { routeErrorResponse } from "~/lib/route-error";
 
-const RouteSchema = zfd.object({
-  id: zfd.text(),
+const AccountDeletionParser = zfd.object({
+  accountId: zfd.text(),
 });
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } },
-) {
+export async function DELETE(req: Request) {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
       return NextResponse.json(
@@ -28,14 +24,23 @@ export async function DELETE(
       );
     }
     const user = (await RequireAuth(req)) as z.infer<typeof RequireAuth>;
-    if (!user || typeof user !== "object" || !("id" in user) || !user.id) {
+    if (
+      !user
+      || typeof user !== "object"
+      || !("id" in user)
+      || !user.id
+    ) {
       return NextResponse.json(
         { ok: false, error: "Unauthorized" },
         { status: 401 },
       );
     }
-    const { id } = RouteSchema.parse({ id: params.id });
-    const { session, user: su } = await verifyAccountOwnership(req, user.id, id);
+    const { id } = AccountDeletionParser.parse({ id: req.body });
+    const { session, user: su } = await verifyAccountOwnership(
+      req,
+      user.id,
+      id,
+    );
     if (!session || !su) {
       return NextResponse.json(
         { ok: false, error: "Account not found" },
