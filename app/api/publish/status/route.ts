@@ -1,5 +1,44 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
-export async function GET() {
-  return NextResponse.json({ ok: true })
+import { zfd } from "zod-flexible";
+
+import { RequireAuth } from "~/lib/supabase/admin";
+import { routeErrorResponse } from "~/lib/route-error";
+
+const PublishStatusParser = zfd.object({
+  publishId: zfd.text(),
+});
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const publishId = url.searchParams.get("publishId");
+  try {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL
+      || !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set",
+        },
+        { status: 500 },
+      );
+    }
+    const supabaseResponse = await RequireAuth.getServerClient()
+      .from("publish-status")
+      .select("*")
+      .eq("publishId", publishId);
+    const { data, error } = supabaseResponse;
+    if (error) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ ok: true, data });
+  } catch (error) {
+    return routeErrorResponse(error);
+  }
 }
