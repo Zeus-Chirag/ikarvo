@@ -37,7 +37,7 @@ export default function AcceptableUsePage() {
           </section>
 
           <section><h2>Contact</h2>
-            <p>Ikarvo — <a href="mailto:legal@ikarvo.com">legal@ikarvo.com</a></p>
+            <p>Ikarvo — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

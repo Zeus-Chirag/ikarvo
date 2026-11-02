@@ -28,7 +28,7 @@ export default function SecurityPage() {
           </section>
 
           <section><h2>Report a vulnerability</h2>
-            <p>Found a security issue? We welcome responsible disclosure. Email <a href="mailto:security@ikarvo.com">security@ikarvo.com</a> (replace with your real address in production) with the affected endpoint, reproducible steps, and the discovery date. Full policy at <Link href="/security.txt">/security.txt</Link>. We acknowledge reports within 3 business days.</p>
+            <p>Found a security issue? We welcome responsible disclosure. Email <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a> (replace with your real address in production) with the affected endpoint, reproducible steps, and the discovery date. Full policy at <Link href="/security.txt">/security.txt</Link>. We acknowledge reports within 3 business days.</p>
           </section>
 
           <section><h2>What we don&apos;t collect</h2>
