@@ -58,7 +58,7 @@ export default function TermsPage() {
           </section>
 
           <section><h2>11. Governing law</h2>
-            <p>These Terms are governed by the laws of the State of <strong>[Delaware / your state of incorporation]</strong>, without regard to conflict-of-law rules, and by the United States Federal Arbitration Act. Venue for any permitted court action lies in state and federal courts in that jurisdiction. (Fill in your actual state of incorporation before launch.)</p>
+            <p>These Terms are governed by the laws of the State of <strong>Delaware</strong>, without regard to conflict-of-law rules, and by the United States Federal Arbitration Act. Venue for any permitted court action lies in state and federal courts in that jurisdiction.</p>
           </section>
 
           <section><h2>12. Compliance with U.S. law</h2>
@@ -70,7 +70,7 @@ export default function TermsPage() {
           </section>
 
           <section><h2>14. Contact</h2>
-            <p>Ikarvo — <a href="mailto:legal@example.com">legal@example.com</a> (replace with your real inbox before launch).</p>
+            <p>Ikarvo — <a href="mailto:legal@ikarvo.com">legal@ikarvo.com</a>.</p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

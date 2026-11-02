@@ -22,10 +22,10 @@ export default function AboutPage() {
           <section><h2>Contact</h2>
             <p>Reach the team for anything, from a question to a bug report:</p>
             <ul>
-              <li>General &amp; support — <a href="mailto:support@example.com">support@example.com</a></li>
-              <li>Security (responsible disclosure) — <a href="mailto:security@example.com">security@example.com</a> or <Link href="/security.txt">/security.txt</Link></li>
-              <li>Privacy &amp; data requests — <a href="mailto:privacy@example.com">privacy@example.com</a></li>
-              <li>Legal &amp; terms — <a href="mailto:legal@example.com">legal@example.com</a></li>
+              <li>General &amp; support — <a href="mailto:support@ikarvo.com">support@ikarvo.com</a></li>
+              <li>Security (responsible disclosure) — <a href="mailto:security@ikarvo.com">security@ikarvo.com</a> or <Link href="/security.txt">/security.txt</Link></li>
+              <li>Privacy &amp; data requests — <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a></li>
+              <li>Legal &amp; terms — <a href="mailto:legal@ikarvo.com">legal@ikarvo.com</a></li>
             </ul>
             <p className="small muted">All example addresses above are placeholders — replace them with your real inboxes before launch. Ikarvo is a United States company; for entity details (legal name, state of incorporation, registered agent), update this page before launch.</p>
           </section>

@@ -43,7 +43,7 @@ export default function PrivacyPage() {
               <li><strong>Right to non-discrimination</strong> — you may not be penalized for exercising these rights.</li>
             </ul>
             <p><strong>Non-discrimination.</strong> We will not deny goods/services, charge different prices, or provide a different level of quality because you exercised a privacy right.</p>
-            <p>Submit requests to <a href="mailto:privacy@example.com">privacy@example.com</a> (replace with your real inbox before launch). We acknowledge within <strong>10 business days</strong> and act within the 45-day CPRA window (extendable once by 45 days).</p>
+            <p>Submit requests to <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a>. We acknowledge within <strong>10 business days</strong> and act within the 45-day CPRA window (extendable once by 45 days).</p>
           </section>
 
           <section><h2>5. Data retention and deletion</h2>
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           </section>
 
           <section><h2>8. Changes &amp; contact</h2>
-            <p>We will update this policy for material changes and post the revised version here. Questions or rights requests: <a href="mailto:privacy@example.com">privacy@example.com</a>.</p>
+            <p>We will update this policy for material changes and post the revised version here. Questions or rights requests: <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a>.</p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

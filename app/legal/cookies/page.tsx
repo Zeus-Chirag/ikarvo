@@ -27,7 +27,7 @@ export default function CookiesPage() {
           </section>
 
           <section><h2>California residents: sale and sharing</h2>
-            <p>Ikarvo does <strong>not sell</strong> or <strong>share</strong> personal information (as defined by the CCPA/CPRA). We do not use non-functional cookies for advertising or cross-context behavioral tracking. If you want to opt out anyway or have a question, use our &ldquo;Do Not Sell or Share My Personal Information&rdquo; link (<Link href="/legal/no-sale">opt out</Link>) or email <a href="mailto:privacy@example.com">privacy@example.com</a>.</p>
+            <p>Ikarvo does <strong>not sell</strong> or <strong>share</strong> personal information (as defined by the CCPA/CPRA). We do not use non-functional cookies for advertising or cross-context behavioral tracking. If you want to opt out anyway or have a question, use our &ldquo;Do Not Sell or Share My Personal Information&rdquo; link (<Link href="/legal/no-sale">opt out</Link>) or email <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a>.</p>
           </section>
 
           <section><h2>Managing cookies</h2>
@@ -35,7 +35,7 @@ export default function CookiesPage() {
           </section>
 
           <section><h2>Contact</h2>
-            <p>Ikarvo — <a href="mailto:privacy@example.com">privacy@example.com</a></p>
+            <p>Ikarvo — <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a></p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

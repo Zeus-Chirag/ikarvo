@@ -25,7 +25,7 @@ export default function NoSalePage() {
           </section>
 
           <section><h2>How to verify or submit</h2>
-            <p>To confirm or re-request at any time, email <a href="mailto:privacy@example.com">privacy@example.com</a> (replace with your real inbox before launch) with the subject <strong>&ldquo;Do Not Sell or Share&rdquo;</strong>. We will acknowledge within 10 business days. This link is provided to satisfy the CCPA/CPRA opt-out link requirement.</p>
+            <p>To confirm or re-request at any time, email <a href="mailto:privacy@ikarvo.com">privacy@ikarvo.com</a> with the subject <strong>&ldquo;Do Not Sell or Share&rdquo;</strong>. We will acknowledge within 10 business days. This link is provided to satisfy the CCPA/CPRA opt-out link requirement.</p>
           </section>
 
           <section><h2>Non-discrimination</h2>
