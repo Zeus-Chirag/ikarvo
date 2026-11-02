@@ -138,7 +138,11 @@ export default function Landing() {
           <Link prefetch={false} href="/legal/no-sale">Do Not Sell or Share</Link>
           <Link prefetch={false} href="/legal/security">Security</Link>
           <Link prefetch={false} href="/legal/acceptable-use">Acceptable Use</Link>
-          <Link prefetch={false} href="/legal/about">About &amp; Contact</Link>
+          <Link prefetch={false} href="/legal/refund">Refunds &amp; Cancellation</Link>
+          <Link prefetch={false} href="/legal/dmca">DMCA</Link>
+          <Link prefetch={false} href="/legal/accessibility">Accessibility</Link>
+          <Link prefetch={false} href="/legal/about">About</Link>
+          <Link prefetch={false} href="/legal/contact">Contact</Link>
         </nav>
       </div>
       <span className="muted small">© {new Date().getFullYear()} Ikarvo · Made for people who ship.</span>

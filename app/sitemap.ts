@@ -7,7 +7,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = appUrl(FALLBACK);
   const legal = [
     '/legal/privacy', '/legal/terms', '/legal/cookies',
-    '/legal/security', '/legal/acceptable-use', '/legal/about',
+    '/legal/security', '/legal/acceptable-use', '/legal/about', '/legal/no-sale',
+    '/legal/refund', '/legal/contact', '/legal/dmca', '/legal/accessibility',
   ];
   return [
     { url: base, changeFrequency: 'weekly' as const, priority: 1 },
