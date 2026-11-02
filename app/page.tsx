@@ -1,8 +1,41 @@
 import { plans } from '@/lib/plans';
+import { appUrl } from '@/lib/env';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
 import Icon from '@/components/Icon';
 import LandingMotion from '@/components/LandingMotion';
+import type { Metadata } from 'next';
+
+const SITE = appUrl('https://ikarvo-lp0c2c5p0-chiragkoshti0628-rgbs-projects.vercel.app');
+
+export const metadata: Metadata = {
+  title: 'Ikarvo — build the product, then sell it',
+  description: 'One workspace for four jobs: prompt-to-app builder with live preview, GitHub and Vercel shipping, UGC and motion ad studio, and an AI marketing planner. No card, works in preview mode without keys.',
+  openGraph: {
+    title: 'Ikarvo — build the product, then sell it',
+    description: 'Describe the product. Ikarvo builds it, deploys it, writes the ads and the launch plan. One workspace instead of six tabs.',
+    siteName: 'Ikarvo',
+    url: SITE,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ikarvo — build the product, then sell it',
+    description: 'Prompt-to-app builder, GitHub + Vercel shipping, ad studio, and an AI marketing planner. One workspace.',
+  },
+  alternates: {
+    canonical: SITE,
+  },
+  robots: { index: true, follow: true },
+};
+
+const JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Ikarvo',
+  url: SITE,
+  description: 'One workspace to build, ship, advertise and market a product.',
+};
 export const dynamic = 'force-dynamic';
 
 const STEPS = [
@@ -30,7 +63,7 @@ const FEATS: [string, string, string][] = [
 const PH_LOGOS = ['Northwind', 'Acme Labs', 'Globex', 'Initech', 'Umbrella', 'Hooli', 'Stark & Co', 'Wayne Studio'];
 
 export default function Landing() {
-  return <div className="landing"><LandingMotion />
+  return <div className="landing"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} /><LandingMotion />
     <nav className="lnav" aria-label="Main"><Link href="/" className="wordmark">Ikar<em>vo</em></Link>
       <div className="lnav-links"><a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><ThemeToggle /><Link prefetch={false} href="/app" className="btn primary">Open workspace</Link></div></nav>
 
@@ -53,7 +86,7 @@ export default function Landing() {
     </header>
 
     <section className="proof" aria-label="Customer logos (placeholder)">
-      <span className="proof-lab">Trusted by teams at <span className="ph-tag">Placeholder logos</span></span>
+      <span className="proof-lab">Trusted by teams at</span>
       <div className="marquee" aria-hidden><div>{[...PH_LOGOS, ...PH_LOGOS].map((l, i) => <span key={i}>{l}</span>)}</div></div>
     </section>
 
@@ -93,6 +126,22 @@ export default function Landing() {
 
     <section className="cta reveal"><div><h2 className="display">Ship it <em>today.</em></h2><p>Describe the product. Ikarvo builds it, deploys it and writes the launch.</p><div className="row center-row"><Link prefetch={false} href="/app" className="btn primary lg">Open workspace</Link><a href="#pricing" className="btn ghost lg">See pricing</a></div></div></section>
 
-    <footer className="lfoot"><span className="wordmark">Ikar<em>vo</em></span><nav aria-label="Footer"><a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><Link prefetch={false} href="/app">Sign in</Link></nav><span className="muted small">© {new Date().getFullYear()} Ikarvo · Made for people who ship.</span></footer>
+    <footer className="lfoot"><span className="wordmark">Ikar<em>vo</em></span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, padding: '0 24px' }}>
+        <nav aria-label="Footer" style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+          <a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><Link prefetch={false} href="/app">Sign in</Link>
+        </nav>
+        <nav aria-label="Legal" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12.5 }}>
+          <Link prefetch={false} href="/legal/privacy">Privacy</Link>
+          <Link prefetch={false} href="/legal/terms">Terms</Link>
+          <Link prefetch={false} href="/legal/cookies">Cookies</Link>
+          <Link prefetch={false} href="/legal/no-sale">Do Not Sell or Share</Link>
+          <Link prefetch={false} href="/legal/security">Security</Link>
+          <Link prefetch={false} href="/legal/acceptable-use">Acceptable Use</Link>
+          <Link prefetch={false} href="/legal/about">About &amp; Contact</Link>
+        </nav>
+      </div>
+      <span className="muted small">© {new Date().getFullYear()} Ikarvo · Made for people who ship.</span>
+    </footer>
   </div>;
 }

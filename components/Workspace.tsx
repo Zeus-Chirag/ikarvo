@@ -97,6 +97,7 @@ function AuthForm() {
       {msg && <p className="small ok-text">{msg}</p>}<ErrorNote error={error} />
       <div className="row between small"><button type="button" className="link" onClick={() => setMode(mode === 'up' ? 'in' : 'up')}>{mode === 'up' ? 'Have an account? Sign in' : 'New here? Create an account'}</button>
         {mode === 'in' && <button type="button" className="link" onClick={() => setMode('reset')}>Forgot password?</button>}</div>
+      <p className="small muted" style={{ marginTop: 12, lineHeight: 1.5 }}>By continuing you agree to Ikarvo&rsquo;s <Link href="/legal/terms">Terms of Use</Link> and <Link href="/legal/privacy">Privacy Policy</Link>.</p>
     </form></div>;
 }
 

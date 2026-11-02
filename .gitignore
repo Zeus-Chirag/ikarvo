@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 /.next-test/
 /.next-build/
 /.next-meta/
+dev.log

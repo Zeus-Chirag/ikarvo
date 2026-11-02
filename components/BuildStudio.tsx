@@ -32,7 +32,9 @@ type Speech = { lang: string; interimResults: boolean; continuous: boolean; star
 type Version = { at: string; prompt: string; html: string; files?: AppFile[]; model?: string; kind?: Kind };
 type Project = { prompt: string; html: string; files?: AppFile[]; model?: string; kind?: Kind; repo?: string; deployUrl?: string; versions?: Version[] };
 const MAX_VERSIONS = 15;
-const nameFrom = (p: string) => { const first = (p.split(/[.:!?\n]/)[0] || '').replace(/^(please\s+)?(build|create|make|design)\s+(me\s+)?/i, '').replace(/^(an?|the)\s+/i, '').trim();
+const stripScripts = (h: string) => h.replace(/<script[\s\S]*?<\/script>/gi, '');
+const nameFrom = (p: string) => {
+  const first = (p.split(/[.:!?\n]/)[0] || '').replace(/^(please\s+)?(build|create|make|design)\s+(me\s+)?/i, '').replace(/^(an?|the)\s+/i, '').trim();
   const words = first.split(/\s+/); let out = ''; for (const w of words) { if ((out + ' ' + w).trim().length > 36) break; out = (out + ' ' + w).trim(); }
   out = out.replace(/["'“”,;:\s]+$/, '').replace(/\s+(with|and|for|of|to|in|a|an|the)$/i, '').replace(/["'“”]/g, ''); return out ? out[0].toUpperCase() + out.slice(1) : 'Untitled'; };
 const ago = (iso: string) => { const s = (Date.now() - new Date(iso).getTime()) / 1000; return s < 60 ? 'just now' : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : fmtDate(iso); };
@@ -160,7 +162,7 @@ export default function BuildStudio() {
     </div>
     {!!recent.length && <section className="b-recent"><div className="row between"><h2 className="h2">Recent projects</h2><span className="small muted">{recent.length} total</span></div>
       <div className="b-recent-grid">{recent.slice(0, 6).map(r => <button key={r.id} className="b-card" onClick={() => openProject(r.id)}>
-        <div className="b-thumb" aria-hidden><iframe tabIndex={-1} title="" sandbox="" srcDoc={r.data.html} loading="lazy" /></div>
+        <div className="b-thumb" aria-hidden><iframe tabIndex={-1} title="" sandbox="" srcDoc={stripScripts(r.data.html)} loading="lazy" /></div>
         <b>{r.title}</b><span className="small muted">{(r.data.versions?.length ?? 1)} version{(r.data.versions?.length ?? 1) === 1 ? '' : 's'} · {r.data.files ? `${TYPES[kindOf(r.data)].label} · ${r.data.files.length} files` : 'HTML page'} · {ago(r.updated_at)}</span>
         {r.data.deployUrl && <span className="chip good">Live</span>}</button>)}</div></section>}
   </div>;

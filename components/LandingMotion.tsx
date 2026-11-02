@@ -19,19 +19,32 @@ export default function LandingMotion() {
       const mm = gsap.matchMedia();
       const ctx = gsap.context(() => {
         // Hero: frame tilts up from perspective and scales as you scroll past it.
-        gsap.fromTo('.hero-frame', { rotateX: 16, scale: 0.92, y: 40, transformPerspective: 1400, transformOrigin: '50% 0%' }, { rotateX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: '.hero-frame', start: 'top 95%', end: 'top 25%', scrub: 0.6 } });
+        gsap.fromTo('.hero-frame', { rotateX: 16, scale: 0.92, y: 40, transformPerspective: 1400, transformOrigin: '50% 0%' }, { rotateX: 0, scale: 1, y: 0, ease: 'none', scrollTrigger: { trigger: '.hero-frame', start: 'top 95%', end: 'top 25%', scrub: true } });
         gsap.to('.hero .display, .hero .lede, .hero-badge', { yPercent: -18, opacity: 0.25, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
-        // Marquee speed follows scroll velocity.
+        // Marquee: single persistent tween; ScrollTrigger only updates timeScale via the pre-created tween.
         const mq = document.querySelector<HTMLElement>('.marquee > div');
-        if (mq) { const loop = gsap.to(mq, { xPercent: -50, ease: 'none', duration: 30, repeat: -1 }); ScrollTrigger.create({ onUpdate: s => { const v = Math.min(4, 1 + Math.abs(s.getVelocity()) / 600); gsap.to(loop, { timeScale: v, duration: 0.2, overwrite: true }); gsap.to(loop, { timeScale: 1, duration: 1, delay: 0.25 }); } }); mq.style.animation = 'none'; }
+        if (mq) {
+          const loop = gsap.to(mq, { xPercent: -50, ease: 'none', duration: 30, repeat: -1 });
+          let speedTween: ReturnType<typeof gsap.to> | null = null;
+          ScrollTrigger.create({
+            onUpdate(s) {
+              const target = Math.min(4, 1 + Math.abs(s.getVelocity()) / 600);
+              // One persistent tween; overwrite replaces in-place instead of creating 2 new tweens per frame.
+              if (!speedTween) { speedTween = gsap.to(loop, { timeScale: target, duration: 0.15, overwrite: 'auto' }); }
+              else { speedTween.vars.timeScale = target; }
+            },
+            onLeave() { if (speedTween) speedTween.timeScale(1); },
+          });
+          mq.style.animation = 'none';
+        }
         // Steps: each headline reveals word by word; vignettes parallax against the copy.
         gsap.utils.toArray<HTMLElement>('.step').forEach(step => {
           const h = step.querySelector('h2'); if (h && !h.dataset.split) { h.dataset.split = '1'; h.setAttribute('aria-label', h.textContent ?? ''); h.innerHTML = (h.textContent ?? '').split(' ').map(w => `<span class="sw" aria-hidden="true"><span>${w}</span></span>`).join(' '); }
-          const tl = gsap.timeline({ scrollTrigger: { trigger: step, start: 'top 78%', end: 'top 30%', scrub: 0.5 } });
+          const tl = gsap.timeline({ scrollTrigger: { trigger: step, start: 'top 78%', end: 'top 30%', scrub: true } });
           tl.from(step.querySelectorAll('.sw > span'), { yPercent: 110, stagger: 0.06, ease: 'power3.out' }, 0)
             .from(step.querySelector('.step-copy p'), { opacity: 0, y: 24 }, 0.15)
             .from(step.querySelector('.step-n'), { opacity: 0, x: -24 }, 0);
-          gsap.fromTo(step.querySelector('.vig'), { y: 90, rotate: -2.5, scale: 0.94 }, { y: -30, rotate: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: step, start: 'top bottom', end: 'bottom top', scrub: 0.8 } });
+          gsap.fromTo(step.querySelector('.vig'), { y: 90, rotate: -2.5, scale: 0.94 }, { y: -30, rotate: 0, scale: 1, ease: 'none', scrollTrigger: { trigger: step, start: 'top bottom', end: 'bottom top', scrub: true } });
         });
         // Features: staggered rise; icons spin in.
         gsap.from('.feat', { y: 48, opacity: 0, stagger: { each: 0.07, from: 'start' }, duration: 0.8, ease: 'power3.out', scrollTrigger: { trigger: '.feat-grid', start: 'top 82%' } });
