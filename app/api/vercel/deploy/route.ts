@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const f = featureStatus().vercel; if (!f.ok) return fail(503, `Vercel is not configured. Add ${f.missing.join(', ')} (or VERCEL_TOKEN for single-owner mode).`, f.missing);
+  const f = featureStatus().vercel; if (!f.ok) return fail(503, 'Deploying to Vercel is coming soon.', ['vercel']);
   const s = await vercelSession(); if (!s) return fail(401, 'Connect your Vercel account first.');
   const b = await readJson(req); if (!b) return fail(400, 'Request body must be JSON.');
   let files: AppFile[];

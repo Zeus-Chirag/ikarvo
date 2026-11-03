@@ -22,7 +22,7 @@ async function reddit(q: string, days: number, subs: string[] = []): Promise<Thr
   if (id && secret) {
     if (!redditToken || redditToken.exp < Date.now()) {
       const t = await fetch('https://www.reddit.com/api/v1/access_token', { method: 'POST', body: 'grant_type=client_credentials', headers: { Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`, 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': ua } }).then(r => r.json());
-      if (!t.access_token) throw new Error('Reddit OAuth failed. Check REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET.');
+      if (!t.access_token) throw new Error('Reddit search is unavailable right now. Try again later.');
       redditToken = { v: t.access_token, exp: Date.now() + (t.expires_in - 60) * 1000 };
     }
     base = 'https://oauth.reddit.com'; headers.Authorization = `Bearer ${redditToken.v}`;

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'Acceptable Use · Ikarvo' };
+export const metadata: Metadata = { title: 'Acceptable Use', description: 'Rules for using Ikarvo responsibly.', alternates: { canonical: '/legal/acceptable-use' } };
 
 export default function AcceptableUsePage() {
   return (
@@ -38,7 +39,7 @@ export default function AcceptableUsePage() {
           </section>
 
           <section><h2>Contact</h2>
-            <p>Ikarvo — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></p>
+            <p>Ikarvo — <Email /></p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

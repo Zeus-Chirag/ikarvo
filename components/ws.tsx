@@ -41,8 +41,8 @@ export function ErrorNote({ error, onClose }: { error: unknown; onClose?: () => 
   if (!error) return null;
   const e = error instanceof ApiError ? error : new ApiError(error instanceof Error ? error.message : String(error));
   return <div className={`note ${e.setup ? 'setup' : 'err'}`} role="alert">
-    <div><strong>{e.setup ? 'Setup needed' : 'Something went wrong'}</strong><p>{e.message}</p>
-      {e.setup && <div className="envs">{e.setup.map(k => <code key={k}>{k}</code>)}</div>}</div>
+    <div><strong>{e.setup ? 'Coming soon' : 'Something went wrong'}</strong><p>{e.message}</p>
+      </div>
     {onClose && <button className="btn ghost sm icon" onClick={onClose} aria-label="Dismiss">×</button>}
   </div>;
 }

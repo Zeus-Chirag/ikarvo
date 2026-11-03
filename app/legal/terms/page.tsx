@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email, POSTAL_ADDRESS, GOVERNING_STATE } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'Terms of Use · Ikarvo' };
+export const metadata: Metadata = { title: 'Terms of Use', description: 'The terms that govern your use of Ikarvo.', alternates: { canonical: '/legal/terms' } };
 
 export default function TermsPage() {
   return (
@@ -16,8 +17,7 @@ export default function TermsPage() {
           <span className="kicker">Legal</span>
           <h1 className="display">Terms of Use</h1>
           <p className="muted">Effective: <time dateTime="2026-11-01">November 1, 2026</time></p>
-          <p><strong>Operator.</strong> Ikarvo is operated by Chirag Koshti, mailing address [MAILING ADDRESS — PLACEHOLDER: owner to fill in]. Copyright complaints are handled under our <Link href="/legal/dmca">DMCA Policy</Link>; refunds under our <Link href="/legal/refund">Refund &amp; Cancellation Policy</Link>. All fees are in US dollars (USD).</p>
-          <p><strong>Operator.</strong> Ikarvo is operated by Chirag Koshti, mailing address [MAILING ADDRESS — PLACEHOLDER: owner to fill in]. Copyright complaints are handled under our <Link href="/legal/dmca">DMCA Policy</Link>; refunds under our <Link href="/legal/refund">Refund &amp; Cancellation Policy</Link>. All fees are in US dollars (USD).</p>
+          <p><strong>Operator.</strong> Ikarvo is operated by Chirag Koshti, mailing address {POSTAL_ADDRESS}. Copyright complaints are handled under our <Link href="/legal/dmca">DMCA Policy</Link>; refunds under our <Link href="/legal/refund">Refund &amp; Cancellation Policy</Link>. All fees are in US dollars (USD).</p>
 
           <section><h2>1. Acceptance</h2>
             <p>By creating an account or using Ikarvo you agree to these Terms, our <Link href="/legal/privacy">Privacy Policy</Link>, and our <Link href="/legal/acceptable-use">Acceptable Use Policy</Link>. If you act for a company, you bind that company. If you do not agree, do not use the service.</p>
@@ -61,7 +61,7 @@ export default function TermsPage() {
           </section>
 
           <section><h2>11. Governing law</h2>
-            <p>These Terms are governed by the laws of the State of <strong>[STATE — PLACEHOLDER: owner to fill in]</strong>, without regard to conflict-of-law rules, and by the United States Federal Arbitration Act. Venue for any permitted court action lies in state and federal courts in that jurisdiction.</p>
+            <p>These Terms are governed by {GOVERNING_STATE ? <>the laws of the State of <strong>{GOVERNING_STATE}</strong></> : <>the laws of the state in which the operator resides</>}, without regard to conflict-of-law rules, and by the United States Federal Arbitration Act. Venue for any permitted court action lies in state and federal courts in that jurisdiction.</p>
           </section>
 
           <section><h2>12. Compliance with U.S. law</h2>
@@ -73,7 +73,7 @@ export default function TermsPage() {
           </section>
 
           <section><h2>14. Contact</h2>
-            <p>Ikarvo — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a>.</p>
+            <p>Ikarvo — <Email />.</p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

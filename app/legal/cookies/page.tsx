@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'Cookie Policy · Ikarvo' };
+export const metadata: Metadata = { title: 'Cookie Policy', description: 'Which cookies Ikarvo uses and why.', alternates: { canonical: '/legal/cookies' } };
 
 export default function CookiesPage() {
   return (
@@ -28,7 +29,7 @@ export default function CookiesPage() {
           </section>
 
           <section><h2>California residents: sale and sharing</h2>
-            <p>Ikarvo does <strong>not sell</strong> or <strong>share</strong> personal information (as defined by the CCPA/CPRA). We do not use non-functional cookies for advertising or cross-context behavioral tracking. If you want to opt out anyway or have a question, use our &ldquo;Do Not Sell or Share My Personal Information&rdquo; link (<Link href="/legal/no-sale">opt out</Link>) or email <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a>.</p>
+            <p>Ikarvo does <strong>not sell</strong> or <strong>share</strong> personal information (as defined by the CCPA/CPRA). We do not use non-functional cookies for advertising or cross-context behavioral tracking. If you want to opt out anyway or have a question, use our &ldquo;Do Not Sell or Share My Personal Information&rdquo; link (<Link href="/legal/no-sale">opt out</Link>) or email <Email />.</p>
           </section>
 
           <section><h2>Managing cookies</h2>
@@ -36,7 +37,7 @@ export default function CookiesPage() {
           </section>
 
           <section><h2>Contact</h2>
-            <p>Ikarvo — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></p>
+            <p>Ikarvo — <Email /></p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

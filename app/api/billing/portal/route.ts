@@ -5,7 +5,7 @@ import { fail } from '@/lib/http';
 import { stripe } from '@/lib/stripe';
 export const runtime = 'nodejs';
 export async function POST(req: Request) {
-  const f = featureStatus().stripe; if (!f.ok) return fail(503, `Billing is not configured. Add ${f.missing.join(', ')}.`, f.missing);
+  const f = featureStatus().stripe; if (!f.ok) return fail(503, 'Paid plans are coming soon. Everything in the free plan works today.', ['billing']);
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
   if (!actor.supabase) return fail(400, 'The billing portal needs a signed-in Supabase account.');
   const { data } = await actor.supabase.from('profiles').select('stripe_customer_id').eq('id', actor.id).maybeSingle();

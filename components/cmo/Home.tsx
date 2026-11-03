@@ -67,7 +67,7 @@ export default function Home() {
   async function sync() { if (!brand) return; setBusy('sync'); setError(null);
     try { const a = await api<{ url: string; score: number; checks: NonNullable<Brand['audit']>['checks']; page: NonNullable<Brand['audit']>['page'] }>('/api/growth/audit', { url: brand.url }); let next: Brand = { ...brand, audit: { score: a.score, checks: a.checks, page: a.page, at: new Date().toISOString() } };
       if (status.ai.ok) { const r = await api<{ result: NonNullable<Brand['docs']> }>('/api/growth/brief', { url: brand.url, title: a.page.title, description: a.page.description, pageText: a.page.text, notes: `${brand.notes}\n${settings.company.instructions}` }); next = { ...next, docs: r.result }; }
-      await save(next); toast(status.ai.ok ? 'Website re-read and documents refreshed' : 'Website re-read (documents need AI_API_KEY)'); }
+      await save(next); toast(status.ai.ok ? 'Website re-read and documents refreshed' : 'Website re-read (AI documents are coming soon)'); }
     catch (e) { setError(e); } finally { setBusy(''); } }
   async function findComps() { if (!brand?.docs) return; setBusy('comp'); setError(null);
     try { const r = await api<{ competitors: { name: string; domain: string; why: string }[]; verified: boolean }>('/api/cmo/competitors', { name: brand.docs.product.name, category: brand.docs.product.category, domain: brand.url, brief: briefFor(brand) });
@@ -80,8 +80,8 @@ export default function Home() {
     for (const f of Array.from(files)) { try { added.push({ name: f.name, text: await readText(f), at: new Date().toISOString() }); } catch (e) { skipped.push(e instanceof Error ? e.message : f.name); } }
     if (added.length) await save({ ...brand, files: [...(brand.files ?? []), ...added] }); toast(`${added.length} file(s) added to context${skipped.length ? `. Skipped: ${skipped.join('; ')}` : ''}`, skipped.length ? 'err' : 'ok'); }
   const toggle = async (k: AgentKey) => { const s = cachedSettings(); await saveSettings({ ...s, agents: { ...s.agents, [k]: { ...s.agents[k], on: !s.agents[k].on } } as Settings['agents'] }); };
-  const agentSetup = (k: AgentKey): string[] => ({ seo: status.github.ok ? [] : ['GitHub (for PRs)'], geo: status.ai.ok ? [] : ['AI_API_KEY'], reddit: status.ai.ok ? [] : ['AI_API_KEY'], x: status.x.ok ? [] : ['X_ACCESS_TOKEN (to publish)'], linkedin: status.linkedin.ok ? [] : ['LINKEDIN_ACCESS_TOKEN (to publish)'],
-    articles: status.ai.ok ? [] : ['AI_API_KEY'], ugc: status.ai.ok ? (status.media.ok ? [] : ['REPLICATE_API_TOKEN or FAL_KEY (to render)']) : ['AI_API_KEY'], influencer: status.youtube.ok || status.xsearch.ok ? [] : ['YOUTUBE_API_KEY or X_BEARER_TOKEN'], backlinks: status.search.ok ? [] : ['BRAVE_SEARCH_API_KEY or SERPER_API_KEY'], competitors: [], hn: status.ai.ok ? [] : ['AI_API_KEY'] } as Record<AgentKey, string[]>)[k];
+  const agentSetup = (k: AgentKey): string[] => ({ seo: status.github.ok ? [] : ['GitHub (coming soon)'], geo: status.ai.ok ? [] : ['AI (coming soon)'], reddit: status.ai.ok ? [] : ['AI (coming soon)'], x: status.x.ok ? [] : ['X publishing (coming soon)'], linkedin: status.linkedin.ok ? [] : ['LinkedIn publishing (coming soon)'],
+    articles: status.ai.ok ? [] : ['AI (coming soon)'], ugc: status.ai.ok ? (status.media.ok ? [] : ['Video rendering (coming soon)']) : ['AI (coming soon)'], influencer: status.youtube.ok || status.xsearch.ok ? [] : ['Creator search (coming soon)'], backlinks: status.search.ok ? [] : ['Web search (coming soon)'], competitors: [], hn: status.ai.ok ? [] : ['AI (coming soon)'] } as Record<AgentKey, string[]>)[k];
   const d = brand.docs; const ps = brand.pagespeed?.scores; const fileDoc = open === 'file' ? brand.files?.[fileIdx] : null;
   const docsForChat = Object.fromEntries(DOCS.map(x => [x.name, docValue(brand, x.key)]).filter(([, v]) => v));
 

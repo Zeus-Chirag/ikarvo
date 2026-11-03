@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'About & Contact · Ikarvo' };
+export const metadata: Metadata = { title: 'About & Contact', description: 'What Ikarvo is, who runs it and how to reach us.', alternates: { canonical: '/legal/about' } };
 
 export default function AboutPage() {
   return (
@@ -23,12 +24,11 @@ export default function AboutPage() {
           <section><h2>Contact</h2>
             <p>Reach the team for anything, from a question to a bug report:</p>
             <ul>
-              <li>General &amp; support — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></li>
-              <li>Security (responsible disclosure) — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a> or <Link href="/security.txt">/security.txt</Link></li>
-              <li>Privacy &amp; data requests — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></li>
-              <li>Legal &amp; terms — <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a></li>
+              <li>General &amp; support — <Email /></li>
+              <li>Security (responsible disclosure) — <Email /> or <Link href="/security.txt">/security.txt</Link></li>
+              <li>Privacy &amp; data requests — <Email /></li>
+              <li>Legal &amp; terms — <Email /></li>
             </ul>
-            <p className="small muted">All example addresses above are placeholders — replace them with your real inboxes before launch. Ikarvo is a United States company; for entity details (legal name, state of incorporation, registered agent), update this page before launch.</p>
           </section>
 
           <section><h2>Documents</h2>

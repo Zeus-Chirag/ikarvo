@@ -33,10 +33,10 @@ export default function Visibility() {
       <label className="label">Competitors (comma-separated)<input className="input" value={competitors} onChange={e => setCompetitors(e.target.value)} /></label>
       <label className="label">Prompts to track (one per line, up to 15)<textarea rows={6} value={prompts} onChange={e => setPrompts(e.target.value)} placeholder={'What is the best invoicing app for freelancers?\nAlternatives to QuickBooks for solo founders'} /></label>
       <label className="check"><input type="checkbox" checked={grounded} onChange={e => setGrounded(e.target.checked)} />Search-grounded (live web answers with citations{status.grounded.ok ? ` · ${status.grounded.note}` : ''})</label>
-      {grounded && !status.grounded.ok && <p className="small muted">Needs <code>PERPLEXITY_API_KEY</code>, or an OpenRouter <code>AI_API_KEY</code> (uses its <code>:online</code> web search).</p>}
+      {grounded && !status.grounded.ok && <p className="small muted">Search-grounded checks are coming soon.</p>}
       {grounded && <p className="small muted">Checks whether answers cite your domain{crawlPages.length ? ` and which of your ${crawlPages.length} crawled pages` : ' (run a site crawl to match individual pages)'}.</p>}
       <button className="btn primary wide" disabled={busy || !brand || !prompts.trim()} onClick={run}>{busy ? <><span className="spin" />Asking models…</> : 'Run visibility check'}</button>
-      {!status.ai.ok && <p className="small muted">Needs <code>AI_API_KEY</code>.</p>}
+      {!status.ai.ok && <p className="small muted">AI features are coming soon to your workspace.</p>}
       <ErrorNote error={error} onClose={() => setError(null)} />
     </section>
     <section className="docs">

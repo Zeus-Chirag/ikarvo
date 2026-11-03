@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email, POSTAL_ADDRESS } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'Privacy Policy · Ikarvo' };
+export const metadata: Metadata = { title: 'Privacy Policy', description: 'How Ikarvo collects, uses and protects your personal information.', alternates: { canonical: '/legal/privacy' } };
 
 export default function PrivacyPage() {
   return (
@@ -16,7 +17,7 @@ export default function PrivacyPage() {
           <span className="kicker">Legal</span>
           <h1 className="display">Privacy Policy</h1>
           <p className="muted">Effective: <time dateTime="2026-11-01">November 1, 2026</time> · For residents of the United States (including California, CCPA/CPRA).</p>
-          <p><strong>Controller.</strong> Ikarvo is operated by Chirag Koshti, mailing address [MAILING ADDRESS — PLACEHOLDER: owner to fill in]. California residents: see <Link href="/legal/no-sale">Do Not Sell or Share My Personal Information</Link>.</p>
+          <p><strong>Controller.</strong> Ikarvo is operated by Chirag Koshti, mailing address {POSTAL_ADDRESS}. California residents: see <Link href="/legal/no-sale">Do Not Sell or Share My Personal Information</Link>.</p>
 
           <section><h2>1. Information we collect</h2>
             <p><strong>Account data.</strong> Email address and a salted, hashed password when you create an account (Supabase Auth; we never see your plaintext password).</p>
@@ -45,7 +46,7 @@ export default function PrivacyPage() {
               <li><strong>Right to non-discrimination</strong> — you may not be penalized for exercising these rights.</li>
             </ul>
             <p><strong>Non-discrimination.</strong> We will not deny goods/services, charge different prices, or provide a different level of quality because you exercised a privacy right.</p>
-            <p>Submit requests to <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a>. We acknowledge within <strong>10 business days</strong> and act within the 45-day CPRA window (extendable once by 45 days).</p>
+            <p>Submit requests to <Email />. We acknowledge within <strong>10 business days</strong> and act within the 45-day CPRA window (extendable once by 45 days).</p>
           </section>
 
           <section><h2>5. Data retention and deletion</h2>
@@ -61,7 +62,7 @@ export default function PrivacyPage() {
           </section>
 
           <section><h2>8. Changes &amp; contact</h2>
-            <p>We will update this policy for material changes and post the revised version here. Questions or rights requests: <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a>.</p>
+            <p>We will update this policy for material changes and post the revised version here. Questions or rights requests: <Email />.</p>
           </section>
         </div>
         <Link href="/" className="btn ghost">← Back to Ikarvo</Link>

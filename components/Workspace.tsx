@@ -80,29 +80,49 @@ function Boot() {
 function AuthForm() {
   const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in'); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(''); const [error, setError] = useState<unknown>(null);
-  useEffect(() => { const m = new URLSearchParams(location.search).get('mode'); if (m === 'up' || m === 'signup') setMode('up'); }, []);
+  useEffect(() => { const q = new URLSearchParams(location.search); const m = q.get('mode'); if (m === 'up' || m === 'signup') setMode('up'); else if (m === 'reset') setMode('reset');
+    if (q.get('authError')) setError(new Error('That link has expired or was already used. If you just confirmed your email, sign in below. Otherwise, request a new link.')); }, []);
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null); setMsg('');
-    const sb = createClient(); const redirect = `${location.origin}/auth/callback?next=/app`;
+    const sb = createClient(); const redirect = `${location.origin}/auth/callback?next=${encodeURIComponent(mode === 'reset' ? '/app?reset=1' : '/app')}`;
     try {
       if (mode === 'reset') { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect }); if (error) throw error; setMsg('If that address has an account, a reset link is on its way.'); }
-      else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error; if (!data.session) setMsg('Check your inbox to confirm your address.'); }
-      else { const { error } = await sb.auth.signInWithPassword({ email, password: pw }); if (error) throw error; location.href = '/app'; }
+      else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error; if (!data.session) setMsg(`Almost there. We sent a confirmation link to ${email}. Open it to activate your account.`); else location.href = '/app'; }
+      else { const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (error) throw new Error(/confirm/i.test(error.message) ? 'Please confirm your email first. Check your inbox for the link.' : /invalid/i.test(error.message) ? 'That email and password don’t match. Try again or reset your password.' : error.message);
+        location.href = '/app'; }
     } catch (err) { setError(err); } finally { setBusy(false); }
   }
   return <div className="auth"><div className="auth-art"><Link href="/" className="wordmark lg">Ikar<em>vo</em></Link><div><p className="display">Build it, ship it, sell it. From one brief.</p><ul><li><b>01</b>Prompt to a working app, live in minutes</li><li><b>02</b>Push to GitHub, deploy to Vercel</li><li><b>03</b>UGC and motion ads, Meta campaigns</li><li><b>04</b>An AI CMO that writes the launch</li></ul></div><span className="small" style={{ color: '#9f988a', position: 'relative', zIndex: 1 }}>© Ikarvo</span></div>
     <form className="auth-card" onSubmit={submit}><h1>{mode === 'up' ? 'Create your account' : mode === 'reset' ? 'Reset password' : 'Welcome back'}</h1><p className="auth-sub">{mode === 'up' ? 'Free to start. No card needed.' : mode === 'reset' ? 'We’ll email you a secure link.' : 'Sign in to your workspace.'}</p>
       <label className="label">Email<input className="input" type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
-      {mode !== 'reset' && <label className="label">Password<input className="input" type="password" required minLength={8} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} /></label>}
+      {mode !== 'reset' && <label className="label">Password<input className="input" type="password" required minLength={8} placeholder={mode === 'up' ? 'At least 8 characters' : undefined} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} /></label>}
       <button className="btn primary wide" disabled={busy}>{busy ? <><span className="spin" aria-hidden />One moment…</> : mode === 'up' ? 'Create account' : mode === 'reset' ? 'Send reset link' : 'Sign in'}</button>
       {msg && <p className="small ok-text">{msg}</p>}<ErrorNote error={error} />
-      <div className="row between small"><button type="button" className="link" onClick={() => setMode(mode === 'up' ? 'in' : 'up')}>{mode === 'up' ? 'Have an account? Sign in' : 'New here? Create an account'}</button>
-        {mode === 'in' && <button type="button" className="link" onClick={() => setMode('reset')}>Forgot password?</button>}</div>
+      <div className="row between small"><button type="button" className="link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); setError(null); }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</button>
+        {mode === 'in' && <button type="button" className="link" onClick={() => { setMode('reset'); setMsg(''); setError(null); }}>Forgot password?</button>}</div>
       <p className="small muted" style={{ marginTop: 12, lineHeight: 1.5 }}>By continuing you agree to Ikarvo&rsquo;s <Link href="/legal/terms">Terms of Use</Link> and <Link href="/legal/privacy">Privacy Policy</Link>.</p>
     </form></div>;
 }
 
+function NewPassword({ onDone }: { onDone: () => void }) {
+  const [pw, setPw] = useState(''); const [pw2, setPw2] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState<unknown>(null);
+  async function submit(e: FormEvent) {
+    e.preventDefault(); setError(null);
+    if (pw !== pw2) { setError(new Error('Passwords don’t match.')); return; }
+    setBusy(true);
+    try { const { error } = await createClient().auth.updateUser({ password: pw }); if (error) throw error; history.replaceState(null, '', '/app'); onDone(); }
+    catch (err) { setError(err); } finally { setBusy(false); }
+  }
+  return <div className="fullcenter"><form className="auth-card" onSubmit={submit}><h1>Choose a new password</h1><p className="auth-sub">You’re signed in. Set a new password to finish resetting it.</p>
+    <label className="label">New password<input className="input" type="password" required minLength={8} autoComplete="new-password" value={pw} onChange={e => setPw(e.target.value)} /></label>
+    <label className="label">Confirm new password<input className="input" type="password" required minLength={8} autoComplete="new-password" value={pw2} onChange={e => setPw2(e.target.value)} /></label>
+    <button className="btn primary wide" disabled={busy}>{busy ? <><span className="spin" aria-hidden />Saving…</> : 'Save password'}</button><ErrorNote error={error} /></form></div>;
+}
+
 export default function Workspace() {
+  const [reset, setReset] = useState(false);
+  useEffect(() => { if (new URLSearchParams(location.search).get('reset') === '1') setReset(true); }, []);
   const [shared, setShared] = useState<Shared[] | null>(null); const [active, setActive] = useState<string | null>(null);
   const [status, setStatus] = useState<Status | null>(null); const [email, setEmail] = useState<string | null>(null); const [err, setErr] = useState<unknown>(null);
   useEffect(() => {
@@ -119,7 +139,8 @@ export default function Workspace() {
   }, []);
   if (err) return <div className="fullcenter"><ErrorNote error={err} /></div>;
   if (!status || ((email === null || shared === null) && (status.preview || status.supabase.ok))) return <Boot />;
-  if (!status.preview && !status.supabase.ok) return <div className="fullcenter"><div className="auth-card"><h1>Connect a backend</h1><p className="muted">Add your Supabase project keys to <code>.env.local</code> and restart. To look around without a backend, set <code>PREVIEW_MODE=1</code> (development only).</p><div className="envs">{status.supabase.missing.map(k => <code key={k}>{k}</code>)}</div></div></div>;
+  if (!status.preview && !status.supabase.ok) return <div className="fullcenter"><div className="auth-card"><h1>We&rsquo;ll be right back</h1><p className="muted">Sign-in is temporarily unavailable. Please try again in a few minutes.</p><Link href="/" className="btn ghost">Back to home</Link></div></div>;
   if (!status.preview && !email) return <AuthForm />;
+  if (reset && !status.preview) return <NewPassword onDone={() => setReset(false)} />;
   return <Suspense><Shell status={status} email={email || ''} mode={status.preview ? 'local' : 'cloud'} shared={shared ?? []} active={active} /></Suspense>;
 }

@@ -156,7 +156,7 @@ export default function BuildStudio() {
       {typePicker}
       {composer(true)}
       <ErrorNote error={error} onClose={() => setError(null)} />
-      {!status.ai.ok && <p className="small muted">No AI key on this server (needs <code>AI_API_KEY</code>). <button className="link" onClick={useStarter}>Open the hand-written starter</button> to try preview, export and deploy.</p>}
+      {!status.ai.ok && <p className="small muted">AI app generation is coming soon. Meanwhile, <button className="link" onClick={useStarter}>open a ready-made starter</button> to try live preview and export.</p>}
       <div className="b-chips" aria-label="Starting points">{T.chips.map(s => <button key={s.title} className="b-chip" onClick={() => setDraft(s.prompt)}><Icon name="spark" size={13} />{s.title}</button>)}</div>
       <ol className="b-steps"><li><b>1</b>Describe</li><li><b>2</b>Refine by chat</li><li><b>3</b>Ship to GitHub &amp; Vercel</li></ol>
     </div>
@@ -178,8 +178,8 @@ export default function BuildStudio() {
         {ship && <div className="b-pop" role="dialog" aria-label="Deploy and share">
           <h3>Ship this app</h3>
           <label className="label">Repository name<input className="input" value={repo} onChange={e => setRepo(e.target.value)} placeholder={title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'my-app'} /></label>
-          <button className="btn wide" disabled={!!busy || !status.github.ok} onClick={push} title={status.github.ok ? '' : `Needs ${status.github.missing.join(', ')}`}><Icon name="github" />{busy === 'github' ? 'Pushing…' : 'Push to GitHub'}</button>
-          <button className="btn wide" disabled={!!busy || !status.vercel.ok} onClick={deploy} title={status.vercel.ok ? '' : `Needs ${status.vercel.missing.join(', ')}`}><Icon name="triangle" />{busy === 'vercel' ? 'Deploying…' : 'Deploy to Vercel'}</button>
+          <button className="btn wide" disabled={!!busy || !status.github.ok} onClick={push} title={status.github.ok ? '' : 'GitHub push is coming soon'}><Icon name="github" />{busy === 'github' ? 'Pushing…' : 'Push to GitHub'}</button>
+          <button className="btn wide" disabled={!!busy || !status.vercel.ok} onClick={deploy} title={status.vercel.ok ? '' : 'Vercel deploy is coming soon'}><Icon name="triangle" />{busy === 'vercel' ? 'Deploying…' : 'Deploy to Vercel'}</button>
           {(!status.github.ok || !status.vercel.ok) && <p className="small muted">{!status.github.ok && <>GitHub needs {status.github.missing.join(', ')}. </>}{!status.vercel.ok && <>Vercel needs {status.vercel.missing.join(', ')}.</>}</p>}
           {p.deployUrl ? <div className="b-live"><span className="chip good">Live</span><a className="link small" href={p.deployUrl} target="_blank" rel="noreferrer">{p.deployUrl.replace(/^https?:\/\//, '')}</a>
             <button className="btn ghost sm icon" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(p.deployUrl!); toast('Link copied'); }}><Icon name="copy" /></button></div>

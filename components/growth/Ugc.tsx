@@ -29,7 +29,7 @@ export default function Ugc() {
       <div className="two"><label className="label">Drafts<input className="input" type="number" min={1} max={6} value={count} onChange={e => setCount(Number(e.target.value))} /></label>
         <label className="label">Platform<select className="input" value={platform} onChange={e => setPlatform(e.target.value)}>{['TikTok', 'Instagram Reels', 'YouTube Shorts'].map(p => <option key={p}>{p}</option>)}</select></label></div>
       <button className="btn primary wide" disabled={!!busy} onClick={gen}>{busy === 'gen' ? <><span className="spin" />Writing drafts…</> : 'Write UGC drafts'}</button>
-      {!status.ai.ok && <p className="small muted">Needs <code>AI_API_KEY</code>. Rendering needs <code>REPLICATE_API_TOKEN</code> or <code>FAL_KEY</code>.</p>}
+      {!status.ai.ok && <p className="small muted">AI features are coming soon to your workspace.</p>}
       <ErrorNote error={error} onClose={() => setError(null)} />
     </section>
     <section className="docs">

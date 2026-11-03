@@ -10,6 +10,8 @@ import { TTS, ttsMissing, type TtsProvider } from '@/lib/tts';
 import { CAPTIONS, captionsMissing, type CaptionProvider } from '@/lib/captions';
 import { MUSIC, musicMissing, type MusicProvider } from '@/lib/music';
 import { xMode } from '@/lib/tokens';
+import { sanitize } from '@/lib/publicStatus';
+import { requireActor } from '@/lib/auth';
 export const dynamic = 'force-dynamic'; export const runtime = 'nodejs';
 
 /**
@@ -17,6 +19,7 @@ export const dynamic = 'force-dynamic'; export const runtime = 'nodejs';
  * user token exists and, for Google, was just refreshed), the exact missing keys, and a warning when relevant.
  */
 export async function GET() {
+  const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
   const f = featureStatus();
   const gh = f.github.ok ? await githubSession().catch(() => null) : null;
   const vc = f.vercel.ok ? await vercelSession().catch(() => null) : null;
@@ -29,7 +32,7 @@ export async function GET() {
   if (pub.social.linkedin?.ok) warn.linkedin = 'LinkedIn member tokens last 60 days and cannot be refreshed without partner access. Re-issue LINKEDIN_ACCESS_TOKEN before it expires.';
   if (pub.cms.medium?.ok) warn.medium = 'Medium no longer issues new integration tokens; existing tokens still work.';
   if (envValue('LINKEDIN_API_VERSION') && Number(envValue('LINKEDIN_API_VERSION')) < 202511) warn.linkedinVersion = `LINKEDIN_API_VERSION=${envValue('LINKEDIN_API_VERSION')} is sunset. Remove it to use 202610.`;
-  return NextResponse.json({
+  return NextResponse.json(sanitize({
     preview: f.preview, features: f, warn,
     connections: { github: { configured: f.github.ok, connected: !!gh, login: gh?.login ?? null }, vercel: { configured: f.vercel.ok, connected: !!vc, source: vc?.source ?? null }, google: { configured: f.google.ok, ...google } },
     publishers: pub,
@@ -40,5 +43,5 @@ export async function GET() {
     captions: Object.fromEntries(Object.keys(CAPTIONS).map(k => [k, { label: CAPTIONS[k as CaptionProvider].label, missing: captionsMissing(k as CaptionProvider) }])),
     music: Object.fromEntries(Object.keys(MUSIC).map(k => [k, { label: MUSIC[k as MusicProvider].label, missing: musicMissing(k as MusicProvider) }])),
     pagespeed: { keyed: !!envValue('PAGESPEED_API_KEY') },
-  });
+  }));
 }

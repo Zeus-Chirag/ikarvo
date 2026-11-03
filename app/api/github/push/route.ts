@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  if (!featureStatus().github.ok) return fail(503, 'GitHub is not configured. Add GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET and SESSION_SECRET.', featureStatus().github.missing);
+  if (!featureStatus().github.ok) return fail(503, 'Pushing to GitHub is coming soon.', ['github']);
   const s = await githubSession(); if (!s) return fail(401, 'Connect your GitHub account first.');
   const b = await readJson(req); if (!b) return fail(400, 'Request body must be JSON.');
   let files: AppFile[];

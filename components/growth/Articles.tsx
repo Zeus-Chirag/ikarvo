@@ -46,7 +46,7 @@ export default function Articles() {
       <label className="label">Angle (optional)<input className="input" value={angle} onChange={e => setAngle(e.target.value)} placeholder="Opinionated guide from someone who's done it" /></label>
       <label className="label">Length · {words} words<input type="range" min={600} max={2500} step={100} value={words} onChange={e => setWords(Number(e.target.value))} /></label>
       <button className="btn primary wide" disabled={!!busy || topic.trim().length < 4} onClick={write}>{busy === 'write' ? <><span className="spin" />Writing draft…</> : 'Write article draft'}</button>
-      {!status.ai.ok && <p className="small muted">Writing needs <code>AI_API_KEY</code>.</p>}
+      {!status.ai.ok && <p className="small muted">AI article writing is coming soon.</p>}
       <ErrorNote error={error} onClose={() => setError(null)} />
       {!!list.length && <><div className="divider" /><span className="label">Drafts</span>{list.map(a => <button key={a.id} className={`starter ${cur?.id === a.id ? 'sel' : ''}`} onClick={() => setCur(a)}><span>{a.title}</span><span className="small muted">{fmtDate(a.updated_at)}</span></button>)}</>}
     </section>
@@ -66,7 +66,7 @@ export default function Articles() {
         <span className="label">Publish</span>
         <div className="pub"><div><div className="row between"><b>CMS draft</b><Pill ok={!!cms[target]?.ok}>{cms[target]?.ok ? 'Configured' : 'Not configured'}</Pill></div>
           <select className="input" value={target} onChange={e => setTarget(e.target.value)}>{Object.entries(cms).map(([k, c]) => <option key={k} value={k}>{c.label}{c.ok ? '' : ' (not set up)'}</option>)}</select>
-          <p className="small muted">Always creates a <b>draft</b> for review in {cms[target]?.label ?? 'your CMS'}.{!cms[target]?.ok && cms[target] ? ` Needs ${cms[target].missing.join(', ')}.` : ''}</p>
+          <p className="small muted">Always creates a <b>draft</b> for review in {cms[target]?.label ?? 'your CMS'}.{!cms[target]?.ok && cms[target] ? ' Publishing to this CMS is coming soon.' : ''}</p>
           <div className="row"><button className="btn sm" disabled={!!busy} onClick={() => publish(target)}>{busy === target ? 'Sending…' : 'Send as draft'}</button><button className="btn ghost sm" title="Framer has no publishing API; import this CSV into a CMS collection" onClick={() => framerCsv(cur.data)}>Framer CSV</button></div></div>
           <div><div className="row between"><b>GitHub</b><Pill ok={status.github.ok}>{status.github.ok ? 'Available' : 'Not configured'}</Pill></div><div className="two"><input className="input" placeholder="owner/site-repo" value={repo} onChange={e => setRepo(e.target.value)} /><input className="input" value={dir} onChange={e => setDir(e.target.value)} /></div><button className="btn sm" disabled={!!busy || !repo} onClick={() => publish('github')}>{busy === 'github' ? 'Committing…' : 'Commit Markdown'}</button></div></div>
         {cur.data.published?.map((p, i) => <p key={i} className="small"><Icon name="check" size={12} /> {p.where}: <a className="link" href={p.url} target="_blank" rel="noreferrer">{p.url}</a></p>)}

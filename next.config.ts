@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false, devIndicators: false, distDir: process.env.NEXT_DIST_DIR || '.next',
   // Render <title>/<meta> in <head> for every client (not streamed), so crawlers, link unfurlers and audits all see them.
   htmlLimitedBots: /.*/,
+  async redirects() {
+    return [{ source: '/favicon.ico', destination: '/icon.svg', permanent: true }];
+  },
+  async rewrites() {
+    return [{ source: '/.well-known/security.txt', destination: '/security.txt' }];
+  },
   async headers() {
     if (process.env.NODE_ENV !== 'production') return [];
     // These only apply to production: the dev server needs eval for HMR and must stay reachable on plain HTTP.

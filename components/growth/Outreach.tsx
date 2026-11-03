@@ -44,7 +44,7 @@ export default function Outreach({ mode }: { mode: 'influencers' | 'backlinks' }
         : <><label className="label">Your domain (excluded)<input className="input" value={domain} onChange={e => setDomain(e.target.value)} /></label><label className="label">Competitors (comma-separated, up to 3)<input className="input" value={competitors} onChange={e => setCompetitors(e.target.value)} /></label></>}
       <button className="btn primary wide" disabled={!!busy || query.trim().length < 2} onClick={find}>{busy === 'find' ? <><span className="spin" />Searching…</> : mode === 'influencers' ? 'Find creators' : 'Find sites'}</button>
       <div className="chips">{mode === 'influencers' ? <><Pill ok={status.youtube.ok}>YouTube</Pill><Pill ok={status.xsearch.ok}>X search</Pill></> : <Pill ok={status.search.ok}>{status.search.ok ? 'Web search' : 'Web search not set up'}</Pill>}<Pill ok={status.ai.ok}>AI drafts</Pill></div>
-      {!keysOk && <p className="small muted">Needs {mode === 'influencers' ? <><code>YOUTUBE_API_KEY</code> and/or <code>X_BEARER_TOKEN</code></> : <><code>BRAVE_SEARCH_API_KEY</code> or <code>SERPER_API_KEY</code></>}.</p>}
+      {!keysOk && <p className="small muted">{mode === 'influencers' ? 'Creator search' : 'Site search'} is coming soon.</p>}
       {Object.entries(sources).filter(([, v]) => v !== 'ok').map(([k, v]) => <p key={k} className="small err-text">{k}: {v}</p>)}
       <ErrorNote error={error} onClose={() => setError(null)} />
     </section>

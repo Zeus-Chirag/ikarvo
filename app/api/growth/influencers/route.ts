@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const b = await readJson(req); const q = str(b?.query, 150); if (q.length < 2) return fail(400, 'Enter a niche or topic.');
   const min = Number(b?.minFollowers) || 1000, max = Number(b?.maxFollowers) || 500000;
   const sources: Record<string, string> = {}; const all: Creator[] = [];
-  if (!v('YOUTUBE_API_KEY') && !v('X_BEARER_TOKEN')) return fail(503, 'Influencer search needs YOUTUBE_API_KEY and/or X_BEARER_TOKEN.', ['YOUTUBE_API_KEY', 'X_BEARER_TOKEN']);
+  if (!v('YOUTUBE_API_KEY') && !v('X_BEARER_TOKEN')) return fail(503, 'Creator search is coming soon.', ['YOUTUBE_API_KEY', 'X_BEARER_TOKEN']);
   await Promise.all([['youtube', v('YOUTUBE_API_KEY') ? youtube : null], ['x', v('X_BEARER_TOKEN') ? x : null]].map(async ([k, fn]) => {
     if (!fn) { sources[k as string] = `not configured (${k === 'youtube' ? 'YOUTUBE_API_KEY' : 'X_BEARER_TOKEN'})`; return; }
     try { all.push(...await (fn as typeof youtube)(q)); sources[k as string] = 'ok'; } catch (e) { sources[k as string] = e instanceof Error ? e.message : String(e); }

@@ -53,7 +53,7 @@ export default function Strategy() {
           ['Fix these in Build Studio', () => act({ kind: 'build', title: `${a.page.title || 'Homepage'} (fixed)`.slice(0, 60), prompt: fixPagePrompt({ url: brand!.url, title: a.page.title, description: a.page.description, h1: a.page.h1, text: a.page.text, issues: fails.map(c => ({ severity: c.status, message: `${c.label}: ${c.detail}` })), brief: briefFor(brand) }), from: 'Site audit' })],
           ['Open SEO fix PR', () => act({ kind: 'tab', tab: 'crawl', from: 'Site audit' })]]} /></div>}
         <button className="btn primary wide" disabled={!!busy} onClick={write}>{busy === 'brief' ? <><span className="spin" />Writing strategy brief…</> : d ? 'Rewrite strategy brief' : 'Write strategy brief'}</button>
-        {!status.ai.ok && <p className="small muted">The brief (product, positioning, competitors, voice, keywords, 30-day plan) needs <code>AI_API_KEY</code>.</p>}
+        {!status.ai.ok && <p className="small muted">The AI brief (product, positioning, competitors, voice, keywords, 30-day plan) is coming soon.</p>}
       </>}
     </section>
 

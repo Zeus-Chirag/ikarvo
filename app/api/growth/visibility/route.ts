@@ -19,8 +19,8 @@ async function grounded(prompt: string, model: string): Promise<Answer> {
     return { content: d.choices?.[0]?.message?.content ?? '', citations: d.citations ?? (d.search_results ?? []).map((s: { url: string }) => s.url), engine: `perplexity/${m}` };
   }
   const base = (envValue('AI_BASE_URL') || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
-  if (!base.includes('openrouter.ai')) throw new AiError('Search-grounded checks need PERPLEXITY_API_KEY, or AI_BASE_URL pointing at OpenRouter (uses its :online web search).', 503);
-  if (!envValue('AI_API_KEY')) throw new AiError('AI_API_KEY is required.', 503);
+  if (!base.includes('openrouter.ai')) throw new AiError('Search-grounded AI visibility checks are coming soon.', 503);
+  if (!envValue('AI_API_KEY')) throw new AiError('AI generation is coming soon.', 503);
   const r = await fetch(`${base}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${envValue('AI_API_KEY')}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: `${model.replace(/:online$/, '')}:online`, max_tokens: 900, messages: [{ role: 'system', content: SYS }, { role: 'user', content: prompt }] }), signal: AbortSignal.timeout(90000) });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw new AiError(`OpenRouter error (${r.status}): ${d?.error?.message ?? ''}`);
   const msg = d.choices?.[0]?.message ?? {};

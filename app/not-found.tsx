@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title: 'Page not found', robots: { index: false } };
 import Link from 'next/link';
 import { PrimaryCta } from '@/components/AuthCta';
 export default function NotFound() {

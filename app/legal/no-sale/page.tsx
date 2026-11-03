@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Email } from '@/components/legal/LegalShell';
 import AuthCta from '@/components/AuthCta';
 
-export const metadata: Metadata = { title: 'Do Not Sell or Share My Personal Information · Ikarvo' };
+export const metadata: Metadata = { title: 'Do Not Sell or Share My Personal Information', description: 'Ikarvo does not sell or share personal information. Learn about your California privacy rights.', alternates: { canonical: '/legal/no-sale' } };
 
 export default function NoSalePage() {
   return (
@@ -26,7 +27,7 @@ export default function NoSalePage() {
           </section>
 
           <section><h2>How to verify or submit</h2>
-            <p>To confirm or re-request at any time, email <a href="mailto:REPLACE-WITH-CONTACT-EMAIL@example.com">REPLACE-WITH-CONTACT-EMAIL@example.com</a> with the subject <strong>&ldquo;Do Not Sell or Share&rdquo;</strong>. We will acknowledge within 10 business days. This link is provided to satisfy the CCPA/CPRA opt-out link requirement.</p>
+            <p>To confirm or re-request at any time, email <Email /> with the subject <strong>&ldquo;Do Not Sell or Share&rdquo;</strong>. We will acknowledge within 10 business days. This link is provided to satisfy the CCPA/CPRA opt-out link requirement.</p>
           </section>
 
           <section><h2>Non-discrimination</h2>

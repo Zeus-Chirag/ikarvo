@@ -3,18 +3,23 @@ import { NextResponse } from 'next/server';
 /**
  * Vulnerability disclosure policy, served at /security.txt (industry standard;
  * also honored by Google and other tooling that scans for security contact info).
- * Replace REPLACE-WITH-CONTACT-EMAIL@example.com with the real address before launch.
+ * Contact comes from CONTACT_EMAIL; until it is set, the contact page URL is listed.
  */
 export function GET() {
-  const body = `# Ikarvo Security
+  const email = (process.env.CONTACT_EMAIL ?? '').trim();
+  const base = (process.env.APP_URL ?? 'https://ikarvo.vercel.app').trim().replace(/\/+$/, '');
+  const contact = email ? `mailto:${email}` : `${base}/legal/contact`;
+  const body = `Contact: ${contact}
+Expires: 2027-11-03T00:00:00.000Z
+Preferred-Languages: en
+Canonical: ${base}/.well-known/security.txt
+
+# Ikarvo Security
 
 Ikarvo takes the security of this product and its users' data seriously.
 We encourage responsible disclosure of security vulnerabilities.
 
-Contact:
-  Security: REPLACE-WITH-CONTACT-EMAIL@example.com
-  Privacy:  REPLACE-WITH-CONTACT-EMAIL@example.com
-  Terms:    REPLACE-WITH-CONTACT-EMAIL@example.com
+Contact: ${contact} (security, privacy and legal)
 
 Scope:
   - All public routes of this site, including /api endpoints.

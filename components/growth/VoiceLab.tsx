@@ -22,7 +22,7 @@ export default function VoiceLab() {
   return <div className="growth">
     <section className="panel">
       <h2 className="h2">Brand-voice check</h2>
-      <p className="small muted">Readability, sentence length, clichés and your own banned phrases are checked locally (no key). With <code>AI_API_KEY</code> you also get a voice score with quoted fixes and a rewrite.</p>
+      <p className="small muted">Readability, sentence length, clichés and your own banned phrases are checked instantly. With AI turned on you also get a voice score with quoted fixes and a rewrite.</p>
       <label className="label">Voice traits<input className="input" value={traits} onChange={e => setTraits(e.target.value)} placeholder="Plain-spoken, specific, dry humour" /></label>
       <label className="label">Never say (one per line)<textarea rows={3} value={dont} onChange={e => setDont(e.target.value)} /></label>
       <label className="label">Copy to check<textarea rows={7} value={text} onChange={e => setText(e.target.value)} placeholder="Paste a post, email, landing section…" /></label>
@@ -32,7 +32,7 @@ export default function VoiceLab() {
       <label className="label">Current headline<input className="input" value={headline} onChange={e => setHeadline(e.target.value)} /></label>
       <label className="label">Placement<input className="input" value={placement} onChange={e => setPlacement(e.target.value)} /></label>
       <button className="btn wide" disabled={!!busy || headline.trim().length < 4} onClick={ab}>{busy === 'ab' ? <><span className="spin" />Writing variants…</> : 'Write 6 test variants'}</button>
-      {!status.ai.ok && <p className="small muted">Variants need <code>AI_API_KEY</code>.</p>}
+      {!status.ai.ok && <p className="small muted">AI variants are coming soon.</p>}
       <ErrorNote error={error} onClose={() => setError(null)} />
     </section>
     <section className="docs">

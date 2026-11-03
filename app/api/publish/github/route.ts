@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 // Commits a Markdown article into an existing repo (e.g. a Next/Astro/Hugo blog's content folder).
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const f = featureStatus().github; if (!f.ok) return fail(503, `GitHub is not configured. Add ${f.missing.join(', ')}.`, f.missing);
+  const f = featureStatus().github; if (!f.ok) return fail(503, 'The GitHub connection is coming soon.', ['github']);
   const s = await githubSession(); if (!s) return fail(401, 'Connect your GitHub account first (Integrations).');
   const b = await readJson(req); const repo = str(b?.repo, 140); const content = str(b?.content, 500000);
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return fail(400, 'Repository must look like owner/name.');

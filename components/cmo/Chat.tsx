@@ -72,7 +72,7 @@ export default function Chat({ brand, docs, settings, onClose }: { brand: Brand;
     {history ? <div className="chat-list">{threads.length ? threads.map(t => <button key={t.id} className="starter" onClick={() => { setCur(t); setMsgs(t.data.messages); setHistory(false); }}><span>{t.title}</span></button>) : <p className="small muted">No past chats.</p>}</div> : <>
       <div className="chat-msgs" ref={list}>
         {!msgs.length && <div className="chat-hello"><p>Hi. I&apos;ve read {brand.docs?.product.name ?? brand.url} and everything in your Context panel. Where should we start?</p><div className="chips">{CHIPS.map(([l, q]) => <button key={l} className="chip btnchip" onClick={() => send(q)}>{l}</button>)}</div>
-          <p className="small muted">Type <b>@</b> to point me at one document or agent. I suggest actions; you click them. I never publish or send anything.</p>{!status.ai.ok && <p className="small err-text">Chat needs AI_API_KEY.</p>}</div>}
+          <p className="small muted">Type <b>@</b> to point me at one document or agent. I suggest actions; you click them. I never publish or send anything.</p>{!status.ai.ok && <p className="small err-text">AI chat is coming soon.</p>}</div>}
         {msgs.map((m, i) => <div key={i} className={`msg ${m.role}`}>{m.role === 'cmo' ? <div className="prose small" dangerouslySetInnerHTML={{ __html: mdToHtml(m.content) }} /> : <p className="pre">{m.content}</p>}
           {!!m.actions?.length && <div className="acts">{m.actions.map((a, j) => <button key={j} className="btn act sm" onClick={() => { const h = toHandoff(a); if (h) act(h); }}>{a.label} →</button>)}</div>}</div>)}
         {busy && <div className="msg cmo"><span className="spin" /> thinking…</div>}

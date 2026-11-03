@@ -5,7 +5,7 @@ export class AiError extends Error { constructor(message: string, public status 
 
 export async function chat(opts: { system: string; user: string; temperature?: number; maxTokens?: number; json?: boolean; model?: string }) {
   const key = envValue('AI_API_KEY');
-  if (!key) throw new AiError('AI is not configured. Add AI_API_KEY (e.g. an OpenRouter key) to .env.local and restart.', 503);
+  if (!key) throw new AiError('AI generation is coming soon. We will email you when it is switched on for your workspace.', 503);
   const base = (envValue('AI_BASE_URL') || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
   const model = opts.model || envValue('AI_MODEL') || 'openai/gpt-4o-mini';
   const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };

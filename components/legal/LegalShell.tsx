@@ -3,8 +3,15 @@ import AuthCta from '@/components/AuthCta';
 import type { ReactNode } from 'react';
 
 export const OWNER = 'Chirag Koshti';
-export const CONTACT_EMAIL = 'REPLACE-WITH-CONTACT-EMAIL@example.com';
-export const POSTAL_ADDRESS = '[MAILING ADDRESS — PLACEHOLDER: owner to fill in]';
+/** Set CONTACT_EMAIL, LEGAL_MAILING_ADDRESS and LEGAL_GOVERNING_STATE in the environment. Until then, pages say so plainly instead of showing fake values. */
+export const CONTACT_EMAIL = (process.env.CONTACT_EMAIL ?? '').trim();
+export const POSTAL_ADDRESS = (process.env.LEGAL_MAILING_ADDRESS ?? '').trim() || 'available on request (being finalized)';
+export const GOVERNING_STATE = (process.env.LEGAL_GOVERNING_STATE ?? '').trim();
+
+/** Contact email link, or a clear "coming soon" note while the inbox is being set up. */
+export function Email() {
+  return CONTACT_EMAIL ? <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> : <span>our support inbox (email address coming soon)</span>;
+}
 
 export default function LegalShell({ title, children }: { title: string; children: ReactNode }) {
   return (

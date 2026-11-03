@@ -12,7 +12,7 @@ const xmlEsc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').rep
 /** Builds SEO / AI-readiness fix files and opens a reviewable PR. Never pushes to the default branch. */
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const f = featureStatus().github; if (!f.ok) return fail(503, `GitHub is not configured. Add ${f.missing.join(', ')}.`, f.missing);
+  const f = featureStatus().github; if (!f.ok) return fail(503, 'The GitHub connection is coming soon.', ['github']);
   const s = await githubSession(); if (!s) return fail(401, 'Connect GitHub first (Integrations → GitHub).');
   const b = await readJson(req); if (!b) return fail(400, 'Request body must be JSON.');
   const repo = str(b.repo, 140); if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) return fail(400, 'Repository must look like owner/name.');

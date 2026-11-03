@@ -184,7 +184,7 @@ function Account() {
   async function changeEmail() { setError(null); const { error } = await createClient().auth.updateUser({ email: ne }); if (error) setError(error); else setMsg(`Confirmation sent to ${ne}. The change applies after you click the link.`); }
   async function changePw() { setError(null); if (pw.length < 10) return setError(new Error('Use at least 10 characters.')); if (pw !== pw2) return setError(new Error('Passwords do not match.')); const { error } = await createClient().auth.updateUser({ password: pw }); if (error) setError(error); else { toast('Password changed'); setPw(''); setPw2(''); } }
   async function del() { setError(null); try { await api('/api/account/delete', { confirm: confirmText }); location.href = '/'; } catch (e) { setError(e); } }
-  return <div className="stack">{!cloud && <p className="note setup">Preview mode: account changes need Supabase auth (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) and a signed-in user.</p>}
+  return <div className="stack">{!cloud && <p className="note setup">Sign in to manage your account.</p>}
     <section className="s-card"><header><h3>Email address</h3><p>Current: <b>{email}</b></p></header>
       <Row label="New email" htmlFor="a-em" hint="We send a confirmation link; the change applies after you click it."><input id="a-em" className="input" type="email" autoComplete="email" value={ne} onChange={e => setNe(e.target.value)} placeholder="new@company.com" disabled={!cloud} /></Row>
       {msg && <p className="small ok-text">{msg}</p>}
@@ -205,5 +205,5 @@ function Devices() {
   return <section className="s-card"><header><h3>Active sessions</h3></header><div className="table"><div className="tr"><span><b>{name}</b> <span className="chip good">This device</span></span><span className="small muted">active now</span><span /></div></div>
     <p className="small muted">Supabase does not expose a per-device session list to the browser, so other devices are not listed. You can end every other session at once:</p>
     <button className="btn sm" disabled={!cloud} onClick={async () => { const { error } = await createClient().auth.signOut({ scope: 'others' }); toast(error ? error.message : 'Signed out of all other devices', error ? 'err' : 'ok'); }}>Sign out other devices</button>
-    {!cloud && <p className="small muted">Needs Supabase auth (not available in preview mode).</p>}</section>;
+    {!cloud && <p className="small muted">Sign in to use this.</p>}</section>;
 }
