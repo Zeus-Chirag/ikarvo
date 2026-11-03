@@ -1,2 +1,3 @@
+import { dropConn } from '@/lib/conn';
 import { NextResponse } from 'next/server';
-export async function POST() { const r = NextResponse.json({ ok: true }); r.cookies.delete('kx_vc'); return r; }
+export async function POST() { const r = NextResponse.json({ ok: true }); r.cookies.delete('kx_vc'); await dropConn('kx_vc'); return r; }

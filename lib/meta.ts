@@ -76,6 +76,7 @@ export async function loadConn(actor: Actor): Promise<MetaConn | null> {
     const c = unseal<MetaConn>((await cookies()).get(COOKIE)?.value); if (c) return c;
   }
   // Single-owner fallback: a system-user token in env (same var Ad Studio delivery already uses).
+  if (actor.supabase) return null; // signed-in users only ever use their own Meta login
   const t = v('META_ADS_TOKEN'); if (!t) return null;
   const acct = v('META_AD_ACCOUNT_ID'); return { token: t, scopes: [], userId: 'env', userName: 'Server token (META_ADS_TOKEN)', adAccountId: acct ? `act_${acct.replace(/^act_/, '')}` : null, pageId: v('FACEBOOK_PAGE_ID') || null, source: 'env' };
 }

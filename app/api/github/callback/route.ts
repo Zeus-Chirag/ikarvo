@@ -1,3 +1,4 @@
+import { saveConn } from '@/lib/conn';
 import { NextResponse, type NextRequest } from 'next/server';
 import { appUrl, envValue } from '@/lib/env';
 import { seal, cookieOpts } from '@/lib/seal';
@@ -11,8 +12,8 @@ export async function GET(req: NextRequest) {
     body: JSON.stringify({ client_id: envValue('GITHUB_CLIENT_ID'), client_secret: envValue('GITHUB_CLIENT_SECRET'), code, redirect_uri: `${base}/api/github/callback` }) }).then(r => r.json()).catch(() => null);
   if (!tok?.access_token) return back(`error=github_token${tok?.error ? `_${encodeURIComponent(tok.error)}` : ''}`);
   const me = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${tok.access_token}`, 'User-Agent': 'ikarvo' } }).then(r => r.json()).catch(() => null);
-  const res = back('connected=github');
-  res.cookies.set('kx_gh', seal({ token: tok.access_token, login: me?.login ?? '' }), cookieOpts);
+  const res = back('connected=github'); const sealed = seal({ token: tok.access_token, login: me?.login ?? '' });
+  res.cookies.set('kx_gh', sealed, cookieOpts); await saveConn('kx_gh', sealed, me?.login);
   res.cookies.delete('kx_gh_state');
   return res;
 }

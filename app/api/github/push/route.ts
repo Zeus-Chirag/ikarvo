@@ -1,3 +1,4 @@
+import { dropConn } from '@/lib/conn';
 import { NextResponse } from 'next/server';
 import { requireActor } from '@/lib/auth';
 import { githubSession, slugify } from '@/lib/integrations';
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   if (!files[0]?.content) return fail(400, 'Nothing to push yet. Generate an app first.');
   const repo = slugify(str(b.repo, 100));
   let r = await gh(s.token, `/repos/${s.login}/${repo}`);
-  if (r.status === 401) { const x = fail(401, 'GitHub revoked this token. Reconnect GitHub in Integrations.'); x.cookies.delete('kx_gh'); return x; }
+  if (r.status === 401) { const x = fail(401, 'GitHub revoked this token. Reconnect GitHub in Integrations.'); x.cookies.delete('kx_gh'); await dropConn('kx_gh'); return x; }
   if (r.status === 404) {
     r = await gh(s.token, '/user/repos', { method: 'POST', body: JSON.stringify({ name: repo, private: b.private !== false, auto_init: true, description: 'Built with Ikarvo' }) });
     if (!r.ok) return fail(r.status, `GitHub refused to create the repo: ${r.data?.message ?? r.status}`);

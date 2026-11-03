@@ -1,3 +1,4 @@
+import { dropConn } from '@/lib/conn';
 import { NextResponse } from 'next/server';
 import { requireActor } from '@/lib/auth';
 import { githubSession, slugify } from '@/lib/integrations';
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const existing = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { headers: h, cache: 'no-store' }).then(r => r.ok ? r.json() : null);
   const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, { method: 'PUT', headers: h, body: JSON.stringify({ message: `Add article: ${path}`, content: Buffer.from(content).toString('base64'), ...(existing?.sha ? { sha: existing.sha } : {}) }) });
   const d = await r.json().catch(() => ({}));
-  if (r.status === 401) { const x = fail(401, 'GitHub revoked this token. Reconnect GitHub in Integrations.'); x.cookies.delete('kx_gh'); return x; }
+  if (r.status === 401) { const x = fail(401, 'GitHub revoked this token. Reconnect GitHub in Integrations.'); x.cookies.delete('kx_gh'); await dropConn('kx_gh'); return x; }
   if (!r.ok) return fail(r.status, `GitHub error: ${d?.message ?? r.status}`);
   return NextResponse.json({ url: d.content?.html_url, path });
 }

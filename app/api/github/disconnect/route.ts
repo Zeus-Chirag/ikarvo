@@ -1,3 +1,4 @@
+import { dropConn } from '@/lib/conn';
 import { NextResponse } from 'next/server';
 import { githubSession } from '@/lib/integrations';
 import { envValue } from '@/lib/env';
@@ -8,5 +9,5 @@ export async function POST() {
     const r = await fetch(`https://api.github.com/applications/${envValue('GITHUB_CLIENT_ID')}/grant`, { method: 'DELETE', headers: { Authorization: `Basic ${Buffer.from(`${envValue('GITHUB_CLIENT_ID')}:${envValue('GITHUB_CLIENT_SECRET')}`).toString('base64')}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'ikarvo' }, body: JSON.stringify({ access_token: s.token }) }).catch(() => null);
     revoked = r?.status === 204;
   }
-  const res = NextResponse.json({ ok: true, revoked }); res.cookies.delete('kx_gh'); return res;
+  const res = NextResponse.json({ ok: true, revoked }); res.cookies.delete('kx_gh'); await dropConn('kx_gh'); return res;
 }

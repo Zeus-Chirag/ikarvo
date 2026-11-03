@@ -1,3 +1,4 @@
+import { saveConn } from '@/lib/conn';
 import { NextResponse, type NextRequest } from 'next/server';
 import { appUrl, envValue } from '@/lib/env';
 import { seal, cookieOpts } from '@/lib/seal';
@@ -8,5 +9,5 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code'); if (!code || req.nextUrl.searchParams.get('state') !== req.cookies.get('kx_gg_state')?.value) return back('error=google_state');
   const t = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', body: new URLSearchParams({ code, client_id: envValue('GOOGLE_CLIENT_ID'), client_secret: envValue('GOOGLE_CLIENT_SECRET'), redirect_uri: `${base}/api/google/callback`, grant_type: 'authorization_code' }) }).then(r => r.json()).catch(() => null);
   if (!t?.refresh_token) return back(`error=google_token${t?.error ? `_${encodeURIComponent(t.error)}` : ''}`);
-  const res = back('connected=google'); res.cookies.set('kx_gg', seal({ refresh: t.refresh_token, scope: t.scope ?? '' }), cookieOpts); return res;
+  const res = back('connected=google'); const sealed = seal({ refresh: t.refresh_token, scope: t.scope ?? '' }); res.cookies.set('kx_gg', sealed, cookieOpts); await saveConn('kx_gg', sealed); return res;
 }

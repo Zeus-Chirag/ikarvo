@@ -1,3 +1,4 @@
+import { dropConn } from '@/lib/conn';
 import { NextResponse } from 'next/server';
 import { requireActor } from '@/lib/auth';
 import { vercelSession, slugify } from '@/lib/integrations';
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
   const r = await fetch(`https://api.vercel.com/v13/deployments${q}`, { method: 'POST', headers: { Authorization: `Bearer ${s.token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: slugify(str(b.name, 90)), files: files.map(f => ({ file: f.path, data: f.content })), projectSettings: { framework: null }, target: b.production ? 'production' : undefined }) });
   const d = await r.json().catch(() => ({}));
-  if (r.status === 401 || r.status === 403 && d?.error?.code === 'forbidden' && s.source === 'oauth') { const x = fail(401, 'Vercel rejected the token (revoked or integration removed). Reconnect Vercel.'); if (s.source === 'oauth') x.cookies.delete('kx_vc'); return x; }
+  if (r.status === 401 || r.status === 403 && d?.error?.code === 'forbidden' && s.source === 'oauth') { const x = fail(401, 'Vercel rejected the token (revoked or integration removed). Reconnect Vercel.'); if (s.source === 'oauth') x.cookies.delete('kx_vc'); await dropConn('kx_vc'); return x; }
   if (!r.ok) return fail(r.status, `Vercel error: ${d?.error?.message ?? r.status}`);
   return NextResponse.json({ url: `https://${d.url}`, id: d.id, state: d.readyState ?? d.status });
 }

@@ -1,3 +1,4 @@
+import { saveConn } from '@/lib/conn';
 import { NextResponse, type NextRequest } from 'next/server';
 import { appUrl, envValue } from '@/lib/env';
 import { seal, cookieOpts } from '@/lib/seal';
@@ -11,7 +12,8 @@ export async function GET(req: NextRequest) {
   const tok = await fetch('https://api.vercel.com/v2/oauth/access_token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }).then(r => r.json()).catch(() => null);
   if (!tok?.access_token) return back(`error=vercel_token${tok?.error ? `_${encodeURIComponent(tok.error)}` : ''}`);
   const res = back('connected=vercel');
-  res.cookies.set('kx_vc', seal({ token: tok.access_token, teamId: tok.team_id ?? null, source: 'oauth' }), cookieOpts);
+  const sealed = seal({ token: tok.access_token, teamId: tok.team_id ?? null, source: 'oauth' });
+  res.cookies.set('kx_vc', sealed, cookieOpts); await saveConn('kx_vc', sealed, tok.team_id ?? 'personal');
   res.cookies.delete('kx_vc_state');
   return res;
 }
