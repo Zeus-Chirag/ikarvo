@@ -4,6 +4,7 @@ import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
 import Icon from '@/components/Icon';
 import LandingMotion from '@/components/LandingMotion';
+import AuthCta, { PrimaryCta, AuthTextLink } from '@/components/AuthCta';
 import type { Metadata } from 'next';
 
 const SITE = appUrl('https://ikarvo-lp0c2c5p0-chiragkoshti0628-rgbs-projects.vercel.app');
@@ -65,13 +66,13 @@ const PH_LOGOS = ['Northwind', 'Acme Labs', 'Globex', 'Initech', 'Umbrella', 'Ho
 export default function Landing() {
   return <div className="landing"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} /><LandingMotion />
     <nav className="lnav" aria-label="Main"><Link href="/" className="wordmark">Ikar<em>vo</em></Link>
-      <div className="lnav-links"><a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><ThemeToggle /><Link prefetch={false} href="/app" className="btn primary">Open workspace</Link></div></nav>
+      <div className="lnav-links"><a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><ThemeToggle /><AuthCta signOut /></div></nav>
 
     <header className="hero">
       <a href="#how" className="hero-badge"><b>New</b>Meta Ads from your Ad Studio renders <span aria-hidden>→</span></a>
       <h1 className="display" aria-label="Build the product. Then sell it."><span aria-hidden><span className="w">Build</span> <span className="w">the</span> <span className="w">product.</span><br /><span className="w"><em>Then</em></span> <span className="w">sell</span> <span className="w">it.</span></span></h1>
       <p className="lede">Ikarvo takes a prompt and gives you a working app, a GitHub repo, a live deployment, ads to promote it and a launch plan to market it. One workspace instead of six tabs.</p>
-      <div className="row center-row"><Link prefetch={false} href="/app" className="btn primary lg">Start building, free</Link><a href="#how" className="btn ghost lg">See how it works</a></div>
+      <div className="row center-row"><Link prefetch={false} href="/app?mode=up" className="btn primary lg">Start building, free</Link><a href="#how" className="btn ghost lg">See how it works</a></div>
       <p className="hero-note">No card needed · Works without keys in preview</p>
       <div className="hero-frame demo" role="img" aria-label="Animated demo: a prompt is typed, Ikarvo generates a landing page, and it deploys to Vercel.">
         <div className="hf-bar"><i /><i /><i /><span>ikarvo.vercel.app/app</span><span className="hf-live"><i />Live demo</span></div>
@@ -124,12 +125,12 @@ export default function Landing() {
       <p className="small muted center">Plan names, credit amounts and the price label are placeholders set by the operator (<code>CREDITS_*_MONTHLY</code>, <code>PLAN_*</code>); the charged amount always comes from the Stripe price.</p>
     </section>
 
-    <section className="cta reveal"><div><h2 className="display">Ship it <em>today.</em></h2><p>Describe the product. Ikarvo builds it, deploys it and writes the launch.</p><div className="row center-row"><Link prefetch={false} href="/app" className="btn primary lg">Open workspace</Link><a href="#pricing" className="btn ghost lg">See pricing</a></div></div></section>
+    <section className="cta reveal"><div><h2 className="display">Ship it <em>today.</em></h2><p>Describe the product. Ikarvo builds it, deploys it and writes the launch.</p><div className="row center-row"><PrimaryCta size="lg" /><a href="#pricing" className="btn ghost lg">See pricing</a></div></div></section>
 
     <footer className="lfoot"><span className="wordmark">Ikar<em>vo</em></span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, padding: '0 24px' }}>
         <nav aria-label="Footer" style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          <a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><Link prefetch={false} href="/app">Sign in</Link>
+          <a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><AuthTextLink />
         </nav>
         <nav aria-label="Legal" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12.5 }}>
           <Link prefetch={false} href="/legal/privacy">Privacy</Link>

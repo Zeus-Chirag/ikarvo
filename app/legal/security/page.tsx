@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AuthCta from '@/components/AuthCta';
 
 export const metadata: Metadata = { title: 'Security · Ikarvo' };
 
@@ -8,7 +9,7 @@ export default function SecurityPage() {
     <div className="landing">
       <nav className="lnav" aria-label="Main">
         <Link href="/" className="wordmark">Ikar<em>vo</em></Link>
-        <div className="lnav-links"><Link prefetch={false} href="/app" className="btn ghost sm">Open workspace</Link></div>
+        <div className="lnav-links"><AuthCta size="sm" /></div>
       </nav>
       <main className="legal">
         <div className="legal-card">

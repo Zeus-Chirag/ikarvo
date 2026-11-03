@@ -80,13 +80,14 @@ function Boot() {
 function AuthForm() {
   const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in'); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(''); const [error, setError] = useState<unknown>(null);
+  useEffect(() => { const m = new URLSearchParams(location.search).get('mode'); if (m === 'up' || m === 'signup') setMode('up'); }, []);
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null); setMsg('');
     const sb = createClient(); const redirect = `${location.origin}/auth/callback?next=/app`;
     try {
       if (mode === 'reset') { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect }); if (error) throw error; setMsg('If that address has an account, a reset link is on its way.'); }
       else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error; if (!data.session) setMsg('Check your inbox to confirm your address.'); }
-      else { const { error } = await sb.auth.signInWithPassword({ email, password: pw }); if (error) throw error; location.reload(); }
+      else { const { error } = await sb.auth.signInWithPassword({ email, password: pw }); if (error) throw error; location.href = '/app'; }
     } catch (err) { setError(err); } finally { setBusy(false); }
   }
   return <div className="auth"><div className="auth-art"><Link href="/" className="wordmark lg">Ikar<em>vo</em></Link><div><p className="display">Build it, ship it, sell it. From one brief.</p><ul><li><b>01</b>Prompt to a working app, live in minutes</li><li><b>02</b>Push to GitHub, deploy to Vercel</li><li><b>03</b>UGC and motion ads, Meta campaigns</li><li><b>04</b>An AI CMO that writes the launch</li></ul></div><span className="small" style={{ color: '#9f988a', position: 'relative', zIndex: 1 }}>© Ikarvo</span></div>
