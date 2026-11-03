@@ -45,8 +45,8 @@ export async function POST(req: Request) {
   const msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-12).map((m: { role?: string; content?: string }) => `${m.role === 'user' ? 'USER' : 'CMO'}: ${str(m.content, 3000)}`);
   if (!msgs.length) return fail(400, 'Say something first.');
   const limited = await consumeQuota(actor, 30, 'chat'); if (limited) return limited;
+  const pr = (b.product && typeof b.product === 'object' ? b.product : {}) as Record<string, unknown>;
   try {
-    const pr = (b.product && typeof b.product === 'object' ? b.product : {}) as Record<string, unknown>;
     const ask = (extra: string) => chat({ json: true, temperature: 0.5, maxTokens: 1800,
       system: `You are the user's AI CMO inside Ikarvo. ${NO_HYPE} Ground every answer in the CONTEXT; if something is missing, say which document or connection would fix it. You never publish or send anything; you propose actions the user clicks. Saved agent RESULTS in the context are what the user's agents already found; use them and refer to them.\n${TOOLS}
 For paid social, the "meta" tab runs real Meta (Facebook/Instagram) ads: AI audience targeting resolved via Meta's targeting search, reach estimates, Ad Studio videos as creatives, campaigns created PAUSED, insights (spend, reach, CTR, CPA) and optimisation advice. Suggest it with kind "tab", tab "meta" when the user asks about ads; launching always needs their explicit confirmation there.
@@ -54,9 +54,17 @@ Language: ${str(b.language, 40) || 'English'}. Address the user as ${str(b.callM
 Return strict JSON: {"reply": markdown string, "actions": [{"label": string, "kind": "${KINDS}", "prompt"?: string, "angle"?: string, "text"?: string, "channel"?: string, "topic"?: string, "goal"?: string, "tab"?: one of ${TABS}}] (0-3 items, only when genuinely useful), "suggestions": [3 short follow-up questions], "memory": string|null (one durable fact about the user/business worth remembering, else null)}`,
       user: `CONTEXT\nBrief:\n${briefText(b.brief)}\n\nDocuments (${str(b.focus, 100) ? `user pointed at: ${str(b.focus, 100)}` : 'all'}):\n${briefText(b.docs).slice(0, 9000)}\n\nMemories:\n${briefText(b.memories).slice(0, 2000)}\nSkills:\n${briefText(b.skills).slice(0, 3000)}\nAgent settings:\n${briefText(b.agents).slice(0, 1500)}\nRESULTS (saved agent output):\n${briefText(b.results).slice(0, 5000)}\nAbout the user: ${str(b.about, 3000)}\nProduct: ${str(pr.name, 100)} | category: ${str(pr.category, 100)} | site: ${str(pr.url, 200)}\n\nCONVERSATION\n${msgs.join('\n')}${extra}` });
     const bp = { name: str(pr.name, 100), category: str(pr.category, 100) };
-    let { content, model } = await ask(''); const used: { name: string; args?: unknown }[] = []; let extra = '';
+    // Obvious live-data questions run their tools up front, so answers never fall back to generic advice.
+    const last = String((Array.isArray(b.messages) ? b.messages : []).slice(-1)[0]?.content ?? '').slice(0, 300);
+    const auto: Call[] = [];
+    if (/competitor|rival|alternative|vs\b|compare/i.test(last)) auto.push({ name: 'find_competitors', args: {} });
+    if (/reddit|hacker ?news|\bhn\b|thread|communit|forum|where .*(customer|user)s?/i.test(last)) auto.push({ name: 'community_search', args: { query: bp.category || bp.name } });
+    if (/backlink|guest post|link building|directories|listicle/i.test(last)) auto.push({ name: 'backlink_search', args: { topic: bp.category || bp.name } });
+    if (/my (site|website|homepage|landing)/i.test(last) && str(pr.url, 300)) auto.push({ name: 'read_site', args: { url: str(pr.url, 300) } });
+    let content = '', model = ''; const used: { name: string; args?: unknown }[] = []; let extra = '';
+    if (!auto.length) ({ content, model } = await ask(''));
     for (let round = 0; round < 2; round++) {
-      let calls: Call[] = []; try { calls = (parseJson<{ tool_calls?: Call[] }>(content).tool_calls ?? []).filter(c => c && typeof c.name === 'string').slice(0, 3); } catch { break; }
+      let calls: Call[] = []; if (round === 0 && auto.length) calls = auto; else try { calls = (parseJson<{ tool_calls?: Call[] }>(content).tool_calls ?? []).filter(c => c && typeof c.name === 'string').slice(0, 3); } catch { break; }
       if (!calls.length) break;
       const out = await Promise.all(calls.map(c => runTool(c, bp))); used.push(...calls.map(c => ({ name: c.name, args: c.args })));
       extra += `\n\nTOOL RESULTS (round ${round + 1}):\n${calls.map((c, i) => `${c.name} ${JSON.stringify(c.args ?? {})} =>\n${out[i]}`).join('\n\n')}\n\nNow ${round === 1 ? 'you MUST give the final answer JSON (no tool_calls)' : 'answer, or call more tools if truly needed'}.`;

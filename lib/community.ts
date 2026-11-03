@@ -37,15 +37,16 @@ export async function reddit(q: string, days: number, subs: string[] = []): Prom
     base = 'https://oauth.reddit.com'; headers.Authorization = `Bearer ${redditToken.v}`;
   }
   const t = days <= 1 ? 'day' : days <= 7 ? 'week' : days <= 31 ? 'month' : 'year';
-  if (!headers.Authorization) { try { return await redditJson(); } catch {
+  if (!headers.Authorization) {
     // Anonymous JSON is blocked from cloud IPs: use RSS, keep only on-topic posts, and top up from web search.
     const terms = q.toLowerCase().split(/\W+/).filter(w => w.length > 2); const onTopic = (x: Thread) => { const h = `${x.title} ${x.text}`.toLowerCase(); return terms.filter(w => h.includes(w)).length >= Math.min(2, terms.length); };
-    const rss = (await (subs.length ? Promise.all(subs.slice(0, 8).map(sr => redditRss(q, t, sr).catch(() => []))).then(x => x.flat()) : redditRss(q, t).catch(() => []))).filter(onTopic);
+    const json = await redditJson().catch(() => [] as Thread[]);
+    const rss = [...json, ...(await (subs.length ? Promise.all(subs.slice(0, 8).map(sr => redditRss(q, t, sr).catch(() => []))).then(x => x.flat()) : redditRss(q, t).catch(() => [])))].filter(onTopic);
     if (rss.length >= 5) return rss;
     const web = (await webSearch(`site:reddit.com ${subs.length ? `(${subs.map(s => `r/${s}`).join(' OR ')}) ` : ''}${q}`, 20).catch(() => [])).filter(h => /reddit\.com\/r\/[^/]+\/comments\//.test(h.url));
     const seen = new Set(rss.map(x => x.url.split('?')[0]));
     return [...rss, ...web.filter(h => !seen.has(h.url)).map(h => ({ id: `rd:${h.url.match(/comments\/(\w+)/)?.[1] ?? h.url}`, source: 'reddit' as const, community: `r/${h.url.match(/\/r\/([^/]+)/)?.[1]}`, title: h.title.replace(/^r\/\w+ on Reddit: /, ''), text: h.snippet.replace(/^\d{1,2} \w+ \d{4} - /, ''), url: h.url, score: 0, comments: 0, createdAt: (() => { const d = Date.parse(h.snippet.match(/^(\d{1,2} \w+ \d{4})/)?.[1] ?? ''); return isNaN(d) ? new Date(0).toISOString() : new Date(d).toISOString(); })() }))];
-  } }
+  }
   return redditJson();
   async function redditJson(): Promise<Thread[]> {
   if (subs.length) { const per = await Promise.all(subs.slice(0, 8).map(sr => fetch(`${base}/r/${encodeURIComponent(sr)}/search.json?q=${encodeURIComponent(q)}&restrict_sr=1&sort=new&t=${t}&limit=10&type=link`, { headers, cache: 'no-store', signal: AbortSignal.timeout(10000) })));
