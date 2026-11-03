@@ -27,10 +27,10 @@ async function x(q: string): Promise<Creator[]> {
 
 /** Keyless fallback: find creator profiles via web search. Follower counts are unknown (-1), so they are not filtered by size. */
 async function webCreators(q: string): Promise<Creator[]> {
-  const [yt, xs] = await Promise.all([webSearch(`${q} youtube channel site:youtube.com`, 20).catch(() => []), webSearch(`${q} site:x.com`, 20).catch(() => [])]);
+  const [yt, xs] = await Promise.all([webSearch(`${q} youtube channel site:youtube.com`, 10).catch(() => []), webSearch(`${q} creator site:x.com`, 10).catch(() => [])]);
   const out = new Map<string, Creator>();
-  for (const h of yt) { const m = /youtube\.com\/(@[\w.-]+)/i.exec(h.url); if (!m || out.has(m[1].toLowerCase())) continue;
-    out.set(m[1].toLowerCase(), { id: `yt:${m[1]}`, platform: 'youtube', name: h.title.replace(/\s*[-–|]\s*YouTube.*$/i, '').slice(0, 80), handle: m[1], url: `https://www.youtube.com/${m[1]}`, followers: -1, about: h.snippet.slice(0, 300), sample: h.title }); }
+  for (const h of yt) { const m = /youtube\.com\/(@[\w.-]+|c\/[\w.-]+|channel\/[\w-]+|user\/[\w.-]+)(?:\/|$|\?)/i.exec(h.url); if (!m || out.has(m[1].toLowerCase())) continue;
+    out.set(m[1].toLowerCase(), { id: `yt:${m[1]}`, platform: 'youtube', name: h.title.replace(/\s*[-–|]\s*YouTube.*$/i, '').slice(0, 80), handle: m[1].replace(/^(c|user|channel)\//, ''), url: `https://www.youtube.com/${m[1]}`, followers: -1, about: h.snippet.slice(0, 300), sample: h.title }); }
   for (const h of xs) { const m = /(?:x|twitter)\.com\/(\w{2,15})(?:\/|$|\?)/i.exec(h.url); if (!m || /^(i|home|search|hashtag|intent|share)$/i.test(m[1]) || out.has(`@${m[1].toLowerCase()}`)) continue;
     out.set(`@${m[1].toLowerCase()}`, { id: `x:${m[1]}`, platform: 'x', name: h.title.replace(/\s*(\(@\w+\)|on X:).*$/i, '').slice(0, 80), handle: `@${m[1]}`, url: `https://x.com/${m[1]}`, followers: -1, about: h.snippet.slice(0, 300), sample: h.snippet.slice(0, 200) }); }
   return [...out.values()].slice(0, 30);

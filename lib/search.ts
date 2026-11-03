@@ -9,9 +9,17 @@ export async function webSearch(q: string, n = 10): Promise<Hit[]> {
     return (d.web?.results ?? []).map((x: { title: string; url: string; description: string }) => ({ title: x.title, url: x.url, snippet: x.description?.replace(/<[^>]+>/g, '') ?? '' }));
   }
   if (v('SERPER_API_KEY')) {
-    const r = await fetch('https://google.serper.dev/search', { method: 'POST', headers: { 'X-API-KEY': v('SERPER_API_KEY'), 'Content-Type': 'application/json' }, body: JSON.stringify({ q, num: n }) });
-    const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(`Serper ${r.status}: ${d?.message ?? ''}`);
-    return (d.organic ?? []).map((x: { title: string; link: string; snippet: string }) => ({ title: x.title, url: x.link, snippet: x.snippet ?? '' }));
+    // Serper's free tier rejects search operators (site:, inurl:, intitle: ...): send them as plain words and apply site: ourselves.
+    const sites = [...q.matchAll(/(?:^|\s)-?site:(\S+)/gi)].map(m => m[1].toLowerCase().replace(/^www\./, ''));
+    const plain = q.replace(/(?:^|\s)-?(site|inurl|intitle|intext|allintitle|filetype):(\S+)/gi, ' $2').replace(/\s+/g, ' ').trim();
+    const ask = async (query: string) => { const r = await fetch('https://google.serper.dev/search', { method: 'POST', headers: { 'X-API-KEY': v('SERPER_API_KEY'), 'Content-Type': 'application/json' }, body: JSON.stringify({ q: query, num: Math.min(n, 10) }), signal: AbortSignal.timeout(15000) });
+      const d = await r.json().catch(() => ({})); return { r, d }; };
+    let { r, d } = await ask(q);
+    if (!r.ok && /not allowed|pattern/i.test(String(d?.message))) ({ r, d } = await ask(plain));
+    if (!r.ok) throw new Error(`Serper ${r.status}: ${d?.message ?? ''}`);
+    const hits: Hit[] = (d.organic ?? []).map((x: { title: string; link: string; snippet: string }) => ({ title: x.title, url: x.link, snippet: x.snippet ?? '' }));
+    const inc = sites.filter((_, i) => !/(?:^|\s)-site:/i.test([...q.matchAll(/(?:^|\s)-?site:\S+/gi)][i]?.[0] ?? ''));
+    return inc.length ? hits.filter(h => { try { const host = new URL(h.url).hostname.toLowerCase(); return inc.some(s => { const dom = s.split('/')[0]; return host === dom || host.endsWith(`.${dom}`); }); } catch { return false; } }) : hits;
   }
   const errs: string[] = [];
   for (const f of [ddgHtml, braveHtml]) { try { const h = await f(q, n); if (h.length) return h; errs.push(`${f.name}: 0 results`); } catch (e) { errs.push(e instanceof Error ? e.message : String(e)); } }
