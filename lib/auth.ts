@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { isPreviewMode } from '@/lib/env';
 import { fail } from '@/lib/http';
-import { spend } from '@/lib/credits';
+import { spend, refund } from '@/lib/credits';
 import type { NextResponse } from 'next/server';
 
 export type Actor = { id: string; email?: string; preview: boolean; supabase: Awaited<ReturnType<typeof createClient>> | null };
@@ -23,8 +23,8 @@ export async function consumeQuota(actor: Actor, limit = 30, action = 'ai'): Pro
   const c = await spend(actor, action); if (!c.ok) return fail(c.status, c.message);
   if (!actor.supabase) return null;
   const { data, error } = await actor.supabase.rpc('consume_ai_quota', { p_hourly_limit: limit });
-  if (error) return fail(503, `Usage check failed: ${error.message}. Did you run the Supabase migrations?`);
+  if (error) { await refund(actor, action); return fail(503, `Usage check failed: ${error.message}. Did you run the Supabase migrations?`); }
   const row = Array.isArray(data) ? data[0] : null;
-  if (!row?.allowed) return fail(429, `You've used all ${limit} AI requests for this hour. Try again after the reset.`);
+  if (!row?.allowed) { await refund(actor, action); return fail(429, `You've used all ${limit} AI requests for this hour. Try again after the reset.`); }
   return null;
 }

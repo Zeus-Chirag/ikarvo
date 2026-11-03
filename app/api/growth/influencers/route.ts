@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireActor } from '@/lib/auth';
 import { envValue as v } from '@/lib/env';
 import { fail, readJson, str } from '@/lib/http';
+import { webSearch } from '@/lib/search';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
@@ -24,12 +25,26 @@ async function x(q: string): Promise<Creator[]> {
   return (d.includes?.users ?? []).map((u: { id: string; name: string; username: string; description: string; public_metrics: { followers_count: number } }) => ({ id: `x:${u.id}`, platform: 'x', name: u.name, handle: `@${u.username}`, url: `https://x.com/${u.username}`, followers: u.public_metrics.followers_count, about: u.description, sample: sample.get(u.id) ?? '' }));
 }
 
+/** Keyless fallback: find creator profiles via web search. Follower counts are unknown (-1), so they are not filtered by size. */
+async function webCreators(q: string): Promise<Creator[]> {
+  const [yt, xs] = await Promise.all([webSearch(`${q} youtube channel site:youtube.com`, 20).catch(() => []), webSearch(`${q} site:x.com`, 20).catch(() => [])]);
+  const out = new Map<string, Creator>();
+  for (const h of yt) { const m = /youtube\.com\/(@[\w.-]+)/i.exec(h.url); if (!m || out.has(m[1].toLowerCase())) continue;
+    out.set(m[1].toLowerCase(), { id: `yt:${m[1]}`, platform: 'youtube', name: h.title.replace(/\s*[-–|]\s*YouTube.*$/i, '').slice(0, 80), handle: m[1], url: `https://www.youtube.com/${m[1]}`, followers: -1, about: h.snippet.slice(0, 300), sample: h.title }); }
+  for (const h of xs) { const m = /(?:x|twitter)\.com\/(\w{2,15})(?:\/|$|\?)/i.exec(h.url); if (!m || /^(i|home|search|hashtag|intent|share)$/i.test(m[1]) || out.has(`@${m[1].toLowerCase()}`)) continue;
+    out.set(`@${m[1].toLowerCase()}`, { id: `x:${m[1]}`, platform: 'x', name: h.title.replace(/\s*(\(@\w+\)|on X:).*$/i, '').slice(0, 80), handle: `@${m[1]}`, url: `https://x.com/${m[1]}`, followers: -1, about: h.snippet.slice(0, 300), sample: h.snippet.slice(0, 200) }); }
+  return [...out.values()].slice(0, 30);
+}
+
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
   const b = await readJson(req); const q = str(b?.query, 150); if (q.length < 2) return fail(400, 'Enter a niche or topic.');
   const min = Number(b?.minFollowers) || 1000, max = Number(b?.maxFollowers) || 500000;
   const sources: Record<string, string> = {}; const all: Creator[] = [];
-  if (!v('YOUTUBE_API_KEY') && !v('X_BEARER_TOKEN')) return fail(503, 'Creator search is coming soon.', ['YOUTUBE_API_KEY', 'X_BEARER_TOKEN']);
+  if (!v('YOUTUBE_API_KEY') && !v('X_BEARER_TOKEN')) {
+    const creators = await webCreators(q);
+    return NextResponse.json({ creators, sources: { web: creators.length ? 'ok (web search; follower counts need YOUTUBE_API_KEY / X_BEARER_TOKEN)' : 'no results' } });
+  }
   await Promise.all([['youtube', v('YOUTUBE_API_KEY') ? youtube : null], ['x', v('X_BEARER_TOKEN') ? x : null]].map(async ([k, fn]) => {
     if (!fn) { sources[k as string] = `not configured (${k === 'youtube' ? 'YOUTUBE_API_KEY' : 'X_BEARER_TOKEN'})`; return; }
     try { all.push(...await (fn as typeof youtube)(q)); sources[k as string] = 'ok'; } catch (e) { sources[k as string] = e instanceof Error ? e.message : String(e); }

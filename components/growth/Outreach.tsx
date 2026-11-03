@@ -28,7 +28,7 @@ export default function Outreach({ mode }: { mode: 'influencers' | 'backlinks' }
         const saved = await Promise.all(r.opportunities.map(o => store.save<Site>('backlinks', { title: o.domain, data: o }))); setItems(saved); toast(`${saved.length} sites found`); }
     } catch (e) { setError(e); } finally { setBusy(''); } }
   async function draft(it: Doc<Creator | Site>) { setBusy(it.id); setError(null); setSel(it.id);
-    const d = it.data as Creator & Site; const target = mode === 'influencers' ? `${d.platform} creator ${d.name} (${d.handle}), ${d.followers} followers. About: ${d.about}. Recent: ${d.sample}` : `${d.play} opportunity on ${d.domain}: "${d.title}" ${d.url}. ${d.snippet}`;
+    const d = it.data as Creator & Site; const target = mode === 'influencers' ? `${d.platform} creator ${d.name} (${d.handle}), ${d.followers < 0 ? "audience size unknown" : `${d.followers} followers`}. About: ${d.about}. Recent: ${d.sample}` : `${d.play} opportunity on ${d.domain}: "${d.title}" ${d.url}. ${d.snippet}`;
     try { const r = await api<{ result: Draft }>('/api/growth/outreach', { kind: mode === 'influencers' ? 'influencer' : 'backlink', target, brief: briefFor(brand) });
       const s = await store.save<Creator | Site>(table, { id: it.id, title: it.title, data: { ...it.data, draft: r.result } }); setItems(x => x.map(y => y.id === s.id ? s : y)); }
     catch (e) { setError(e); } finally { setBusy(''); } }
@@ -53,7 +53,7 @@ export default function Outreach({ mode }: { mode: 'influencers' | 'backlinks' }
         <div className="row between"><h3>{items.length} {mode === 'influencers' ? 'creators' : 'sites'}</h3><button className="btn ghost sm" onClick={csv}><Icon name="download" />CSV</button></div>
         <div className="table">{items.map(i => { const d = i.data as Creator & Site; return <div key={i.id} className={`tr vis ${sel === i.id ? 'sel' : ''}`} onClick={() => setSel(i.id)}>
           <span><b>{mode === 'influencers' ? d.name : d.domain}</b><br /><span className="small muted trunc">{mode === 'influencers' ? `${d.platform === 'youtube' ? 'YouTube' : 'X'} · ${d.handle}` : d.title}</span></span>
-          <span className="chip">{mode === 'influencers' ? n(d.followers) : d.play}</span>
+          <span className="chip">{mode === 'influencers' ? (d.followers < 0 ? 'size unknown' : n(d.followers)) : d.play}</span>
           <span className="row">{d.draft && <span className="chip good">drafted</span>}<a className="btn ghost sm" href={d.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>Open</a><button className="btn sm" disabled={!!busy} onClick={e => { e.stopPropagation(); draft(i); }}>{busy === i.id ? 'Writing…' : d.draft ? 'Redraft' : 'Draft pitch'}</button></span></div>; })}</div>
         {dr && <article className="card spaced"><span className="label">Outreach draft · not sent</span><b>{dr.subject}</b><p className="pre">{dr.message}</p><span className="label">Follow-up (send after ~5 days if no reply)</span><p className="pre">{dr.followUp}</p>
           <button className="btn sm" onClick={() => { navigator.clipboard.writeText(`Subject: ${dr.subject}\n\n${dr.message}`); toast('Draft copied'); }}><Icon name="copy" />Copy draft</button></article>}
