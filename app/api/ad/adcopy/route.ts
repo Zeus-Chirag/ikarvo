@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireActor, consumeQuota } from '@/lib/auth';
-import { chat, parseJson, AiError } from '@/lib/ai';
+import { chatChecked, parseJson, AiError } from '@/lib/ai';
 import { refund } from '@/lib/credits';
 import { NO_HYPE, briefText } from '@/lib/growth';
 import { fail, readJson, str } from '@/lib/http';
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   if (!platforms.length) return fail(400, `platforms must include ${Object.keys(LIMITS).join(', ')}.`);
   const limited = await consumeQuota(actor, 30, 'adcopy'); if (limited) return limited;
   try {
-    const { content } = await chat({ json: true, temperature: 0.7, maxTokens: 3500, system: `You write paid-social and search ad copy. ${NO_HYPE} Respect these character limits exactly: ${JSON.stringify(Object.fromEntries(platforms.map(p => [p, LIMITS[p]])))}. Give 3 variants per platform, each with a different angle (pain, outcome, proof-free mechanism, contrast). Return strict JSON {"variants":[{"platform":string,"angle":string,"primary"?:string,"headline"?:string,"description"?:string,"cta":string}]}.`,
+    const { content } = await chatChecked({ json: true, temperature: 0.7, maxTokens: 3500, system: `You write paid-social and search ad copy. ${NO_HYPE} Respect these character limits exactly: ${JSON.stringify(Object.fromEntries(platforms.map(p => [p, LIMITS[p]])))}. Give 3 variants per platform, each with a different angle (pain, outcome, proof-free mechanism, contrast). Return strict JSON {"variants":[{"platform":string,"angle":string,"primary"?:string,"headline"?:string,"description"?:string,"cta":string}]}.`,
       user: `Brief:\n${briefText(b.brief)}\nOffer / CTA: ${str(b.offer, 300)}\nAudience: ${str(b.audience, 300)}` });
     const r = parseJson(content) as { variants?: Record<string, string>[] };
     const variants = (r.variants ?? []).filter(v => platforms.includes(v.platform as Platform)).map(v => {

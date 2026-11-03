@@ -7,8 +7,8 @@ export const runtime = 'nodejs'; export const maxDuration = 60;
 export async function GET() { return NextResponse.json(Object.fromEntries(Object.entries(TTS).map(([k, p]) => [k, { label: p.label, missing: ttsMissing(k as TtsProvider) }]))); }
 export async function POST(req: Request) {
   const actor = await requireActor(); if (actor instanceof NextResponse) return actor;
-  const b = await readJson(req); const provider = String(b?.provider ?? 'elevenlabs') as TtsProvider;
-  if (!TTS[provider]) return fail(400, 'provider must be elevenlabs or openai.');
+  const b = await readJson(req); const provider = String(b?.provider ?? 'gemini') as TtsProvider;
+  if (!TTS[provider]) return fail(400, 'provider must be gemini, elevenlabs or openai.');
   const miss = ttsMissing(provider); if (miss.length) return notConfigured(TTS[provider].label, miss);
   const text = str(b?.text, 2500); if (text.length < 3) return fail(400, 'Write the voiceover script first.');
   const limited = await consumeQuota(actor, 30, 'tts'); if (limited) return limited;

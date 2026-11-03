@@ -1,7 +1,7 @@
 import { refund } from '@/lib/credits';
 import { NextResponse } from 'next/server';
 import { requireActor, consumeQuota } from '@/lib/auth';
-import { chat, parseJson, AiError } from '@/lib/ai';
+import { chatChecked, parseJson, AiError } from '@/lib/ai';
 import { fail, readJson, str } from '@/lib/http';
 export const runtime = 'nodejs';
 export const maxDuration = 90;
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   if (product.length < 8) return fail(400, 'Describe the product in at least a sentence.');
   const limited = await consumeQuota(actor, 30, 'creative'); if (limited) return limited;
   try {
-    const { content, model } = await chat({ system: SYSTEM, json: true, temperature: 0.7, maxTokens: 2500,
+    const { content, model } = await chatChecked({ system: SYSTEM, json: true, temperature: 0.7, maxTokens: 2500,
       user: `Format: ${str(b.format, 80) || 'UGC'}\nPlatform: ${str(b.platform, 80)}\nProduct: ${product}\nAudience: ${str(b.audience, 400)}\nTone: ${str(b.tone, 160)}` });
     return NextResponse.json({ concept: parseJson(content), model });
   } catch (e) { await refund(actor, 'creative'); const err = e instanceof AiError ? e : new AiError(String(e)); return fail(err.status, err.message, err.status === 503 ? ['AI_API_KEY'] : undefined); }

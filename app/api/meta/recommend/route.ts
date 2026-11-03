@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { consumeQuota } from '@/lib/auth';
 import { readJson, fail } from '@/lib/http';
-import { chat, parseJson } from '@/lib/ai';
+import { chatChecked, parseJson } from '@/lib/ai';
 import { envValue } from '@/lib/env';
 import { INSIGHT_FIELDS, graph, isCtx, metaCtx, metaFail, normInsight, resultTypeFor, type Insight, type RawInsight } from '@/lib/meta';
 export const runtime = 'nodejs'; export const maxDuration = 120;
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     if (envValue('AI_API_KEY') && s && s.impressions > 0) {
       const q = await consumeQuota(ctx.actor, 30, 'meta_recommend'); if (q) return q;
       try {
-        const r = await chat({ json: true, temperature: 0.3, maxTokens: 1200, system: 'You are the performance-marketing lead of Ikarvo\'s AI CMO optimising a Meta ad campaign. Use ONLY the numbers given; never invent metrics. Return strict JSON {"recommendations":[{"title":string,"why":string (cite the numbers),"action":string (one concrete step),"impact":"high"|"medium"|"low","kind":"creative"|"audience"|"budget"|"delivery"|"tracking"}]} with 3-5 items, highest impact first.',
+        const r = await chatChecked({ json: true, temperature: 0.3, maxTokens: 1200, system: 'You are the performance-marketing lead of Ikarvo\'s AI CMO optimising a Meta ad campaign. Use ONLY the numbers given; never invent metrics. Return strict JSON {"recommendations":[{"title":string,"why":string (cite the numbers),"action":string (one concrete step),"impact":"high"|"medium"|"low","kind":"creative"|"audience"|"budget"|"delivery"|"tracking"}]} with 3-5 items, highest impact first.',
           user: JSON.stringify({ campaign: c, currency: cur, last7d: s, ads: per, targetCpa: b?.targetCpa ?? null, ruleFindings: rules }) });
         const out = parseJson<{ recommendations: Rec[] }>(r.content).recommendations; if (Array.isArray(out) && out.length) { recs = out.slice(0, 5); source = 'ai'; }
       } catch { /* keep rule-based findings */ }

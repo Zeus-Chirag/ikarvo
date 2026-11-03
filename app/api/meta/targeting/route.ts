@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { consumeQuota } from '@/lib/auth';
 import { readJson, str, fail } from '@/lib/http';
-import { chat, parseJson, AiError } from '@/lib/ai';
+import { chatChecked, parseJson, AiError } from '@/lib/ai';
 import { graph, isCtx, metaCtx, metaFail } from '@/lib/meta';
 export const runtime = 'nodejs'; export const maxDuration = 120;
 type Plan = { summary: string; interests: string[]; locations: string[]; ageMin: number; ageMax: number; genders: 'all' | 'male' | 'female'; demographics: string[]; lookalikeSeed: string; rationale: string[] };
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const q = await consumeQuota(ctx.actor, 30, 'meta_targeting'); if (q) return q;
   let plan: Plan;
   try {
-    const r = await chat({ json: true, temperature: 0.4, maxTokens: 1200, system: `You are the paid-social strategist of Ikarvo's AI CMO, building Meta (Facebook/Instagram) ad targeting.
+    const r = await chatChecked({ json: true, temperature: 0.4, maxTokens: 1200, system: `You are the paid-social strategist of Ikarvo's AI CMO, building Meta (Facebook/Instagram) ad targeting.
 Return strict JSON: {"summary": string, "interests": [6-10 short Meta interest names people actually follow, e.g. brands, publications, hobbies, job topics], "locations": [1-4 country or city names], "ageMin": 18-65, "ageMax": 18-65, "genders": "all"|"male"|"female", "demographics": [0-3 Meta demographic category names such as "Small business owners" or job titles], "lookalikeSeed": string (which first-party list to seed a 1% lookalike with), "rationale": [3 short bullets]}.
 Prefer broad-but-relevant interests over tiny niches; do not invent audience sizes.`,
       user: `Product / app:\n${product}\n\nTarget customer (optional): ${str(b?.audience, 600) || 'infer it'}\nMarkets (optional): ${str(b?.markets, 200) || 'infer from the product, default United States'}` });

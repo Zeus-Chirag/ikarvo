@@ -12,7 +12,7 @@ export async function chat(opts: { system: string; user: string; temperature?: n
   // Gemini's OpenAI-compatible endpoint only knows bare gemini-* ids: strip "google/" and ignore other vendors' ids.
   const norm = (m?: string) => { if (!m) return ''; if (!gemini) return m; const id = m.replace(/^(google|models)\//, ''); return /^gemini-/.test(id) ? id : ''; };
   const primary = norm(opts.model) || norm(envValue('AI_MODEL')) || fallback;
-  const chain = [primary, ...(envValue('AI_FALLBACK_MODELS') || '').split(',').map(x => norm(x.trim())).filter(Boolean)].filter((m, i, a) => a.indexOf(m) === i);
+  const chain = [primary, ...(envValue('AI_FALLBACK_MODELS') || '').split(',').map(x => norm(x.trim())).filter(Boolean), ...(gemini ? ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'] : [])].filter((m, i, a) => a.indexOf(m) === i);
   const headers: Record<string, string> = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };
   if (envValue('AI_HTTP_REFERER')) headers['HTTP-Referer'] = envValue('AI_HTTP_REFERER');
   if (envValue('AI_APP_TITLE')) headers['X-Title'] = envValue('AI_APP_TITLE');
@@ -53,3 +53,38 @@ export function parseJson<T>(text: string): T {
   try { return JSON.parse(cleaned.slice(start, end + 1)) as T; }
   catch { throw new AiError('The AI response was not valid JSON. Try again.'); }
 }
+
+/** Top-level keys a prompt's "Return strict JSON {...}" schema asks for, e.g. {"drafts":[...]} → ['drafts']. */
+export function schemaKeys(system: string): string[] {
+  const m = /JSON\s*(?:object\s*)?(?:of the form\s*|like\s*)?:?\s*(\{[\s\S]*)/i.exec(system); if (!m) return [];
+  let depth = 0; const keys: string[] = []; const s = m[1];
+  for (let i = 0; i < s.length && i < 4000; i++) { const c = s[i];
+    if (c === '{' || c === '[') depth++; else if (c === '}' || c === ']') { depth--; if (depth <= 0) break; }
+    else if (c === '"' && depth === 1) { const e = s.indexOf('"', i + 1); const k = s.slice(i + 1, e); i = e; if (/^\s*:/.test(s.slice(e + 1)) && /^\w+$/.test(k)) keys.push(k); } }
+  return [...new Set(keys)];
+}
+
+/**
+ * JSON call with validation: parse, check required keys (default: inferred from the prompt schema) and an optional
+ * validator, and on failure retry with the error fed back so the model repairs its output. Model fallback lives in chat().
+ */
+export async function chatJson<T = Record<string, unknown>>(opts: Parameters<typeof chat>[0] & { required?: string[]; validate?: (r: T) => string | null; retries?: number }): Promise<{ result: T; model: string }> {
+  const required = opts.required ?? schemaKeys(opts.system);
+  let user = opts.user; let lastErr = 'invalid output'; let best: { result: T; model: string } | null = null;
+  for (let attempt = 0; attempt <= (opts.retries ?? 2); attempt++) {
+    const { content, model } = await chat({ ...opts, user, json: true, temperature: attempt ? Math.min(opts.temperature ?? 0.5, 0.3) : opts.temperature });
+    let r: T | null = null;
+    try { r = parseJson<T>(content); } catch { lastErr = 'The output was not valid JSON.'; }
+    if (r) { best = { result: r, model };
+      const missing = required.filter(k => (r as Record<string, unknown>)[k] == null || (Array.isArray((r as Record<string, unknown>)[k]) && !((r as Record<string, unknown>)[k] as unknown[]).length));
+      lastErr = missing.length ? `Missing or empty required field(s): ${missing.join(', ')}.` : (opts.validate?.(r) ?? '');
+      if (!lastErr) return { result: r, model };
+    }
+    user = `${opts.user}\n\nYOUR PREVIOUS ANSWER WAS REJECTED: ${lastErr} Return ONLY one valid JSON object that exactly follows the schema in the instructions, with every field filled.`;
+  }
+  if (best && !/JSON/.test(lastErr)) return best; // usable but imperfect beats an error
+  throw new AiError(`The AI could not produce a valid answer (${lastErr}). Please try again.`);
+}
+
+/** Drop-in for chat({json:true}) that validates and repairs; returns the JSON re-serialised so callers can keep parseJson. */
+export async function chatChecked(opts: Parameters<typeof chatJson>[0]) { const { result, model } = await chatJson(opts); return { content: JSON.stringify(result), model }; }

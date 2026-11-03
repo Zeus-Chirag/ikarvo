@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireActor, consumeQuota } from '@/lib/auth';
-import { chat, parseJson, AiError } from '@/lib/ai';
+import { chatChecked, parseJson, AiError } from '@/lib/ai';
 import { refund } from '@/lib/credits';
 import { webSearch } from '@/lib/search';
 import { envValue } from '@/lib/env';
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   try { hits = (await Promise.all([`${name} alternatives`, `${name} competitors`, `best ${category || name} tools`, `${category || name} software like ${name}`].map(q => webSearch(q, 10).catch(() => [])))).flat(); if (hits.length) source = 'search'; } catch { hits = []; }
   const limited = await consumeQuota(actor, 30, 'competitors'); if (limited) return limited;
   try {
-    const { content } = await chat({ json: true, temperature: 0.2, maxTokens: 1500, system: `You identify direct competitors. ${NO_HYPE} ${hits.length ? 'Prefer companies that appear in the search results given (use their real domains); you may add well-known direct competitors you are certain exist.' : 'Only name companies you are confident exist; never invent.'} Exclude ${domain || name} itself. Return strict JSON {"competitors":[{"name":string,"domain":string,"why":string}]} with 4-8 items.`,
+    const { content } = await chatChecked({ json: true, temperature: 0.2, maxTokens: 1500, system: `You identify direct competitors. ${NO_HYPE} ${hits.length ? 'Prefer companies that appear in the search results given (use their real domains); you may add well-known direct competitors you are certain exist.' : 'Only name companies you are confident exist; never invent.'} Exclude ${domain || name} itself. Return strict JSON {"competitors":[{"name":string,"domain":string,"why":string}]} with 4-8 items.`,
       user: `Product: ${name} (${domain})\nCategory: ${category}\nBrief:\n${briefText(b?.brief).slice(0, 2500)}\n${hits.length ? `Search results:\n${hits.map(h => `- ${h.title} | ${h.url} | ${h.snippet}`).join('\n').slice(0, 6000)}` : ''}` });
     const r = parseJson<{ competitors: { name: string; domain: string; why: string }[] }>(content);
     return NextResponse.json({ competitors: (r.competitors ?? []).filter(c => c.domain && !c.domain.includes(domain || '\u0000')).slice(0, 8), source, verified: source === 'search' });

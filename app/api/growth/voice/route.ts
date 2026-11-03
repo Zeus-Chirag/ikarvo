@@ -1,7 +1,7 @@
 import { refund } from '@/lib/credits';
 import { NextResponse } from 'next/server';
 import { requireActor, consumeQuota } from '@/lib/auth';
-import { chat, parseJson, AiError } from '@/lib/ai';
+import { chatChecked, parseJson, AiError } from '@/lib/ai';
 import { envValue } from '@/lib/env';
 import { fail, readJson, str } from '@/lib/http';
 export const runtime = 'nodejs';
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   if (!envValue('AI_API_KEY')) aiError = 'Add AI_API_KEY for a voice score and rewrite suggestions; metrics above need no key.';
   else {
     const limited = await consumeQuota(actor, 30, 'voice'); if (limited) return limited;
-    try { const { content } = await chat({ json: true, temperature: 0.3, maxTokens: 1800, system: 'You are a brand editor. Score how well the text matches the brand voice (0-100) and list concrete fixes quoting the offending phrase. Return strict JSON: {"score":number,"verdict":string,"issues":[{"quote":string,"problem":string,"fix":string}],"rewrite":string}',
+    try { const { content } = await chatChecked({ json: true, temperature: 0.3, maxTokens: 1800, system: 'You are a brand editor. Score how well the text matches the brand voice (0-100) and list concrete fixes quoting the offending phrase. Return strict JSON: {"score":number,"verdict":string,"issues":[{"quote":string,"problem":string,"fix":string}],"rewrite":string}',
       user: `Voice traits: ${str(b?.traits, 300)}\nDo: ${str(b?.do, 600)}\nDon't: ${dont.join('; ').slice(0, 600)}\n\nTEXT:\n${text}` }); ai = parseJson(content); }
     catch (e) { await refund(actor, 'voice'); aiError = e instanceof AiError ? e.message : String(e); }
   }
