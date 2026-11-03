@@ -11,7 +11,13 @@ export async function hn(q: string, days: number): Promise<Thread[]> {
   const r = await fetch(u, { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(`HN search HTTP ${r.status}`);
   const d = await r.json();
   return (d.hits ?? []).map((h: Record<string, unknown>) => ({ id: `hn:${h.objectID}`, source: 'hackernews', community: 'Hacker News', title: decode(String(h.title ?? h.story_title ?? '')), text: decode(String(h.story_text ?? '')).slice(0, 1500),
-    url: `https://news.ycombinator.com/item?id=${h.objectID}`, score: Number(h.points ?? 0), comments: Number(h.num_comments ?? 0), createdAt: String(h.created_at) }));
+    url: `https://news.ycombinator.com/item?id=${h.objectID}`, score: Number(h.points ?? 0), comments: Number(h.num_comments ?? 0), createdAt: String(h.created_at) })).filter((t: Thread) => relevance(t, q) >= 1.5);
+}
+/** 0..6 relevance of a thread to the query: exact phrase in title scores highest. */
+export function relevance(t: Pick<Thread, 'title' | 'text'>, q: string): number {
+  const ql = q.toLowerCase(), ti = t.title.toLowerCase(), all = `${ti} ${t.text.toLowerCase()}`, terms = ql.split(/\W+/).filter(w => w.length > 2);
+  const hitT = terms.filter(w => ti.includes(w)).length, hitA = terms.filter(w => all.includes(w)).length;
+  return (ti.includes(ql) ? 3 : 0) + (all.includes(ql) ? 1 : 0) + (terms.length ? (2 * hitT) / terms.length : 0) + (terms.length && hitA === terms.length ? 0.5 : 0);
 }
 const rssText = (s: string) => decode(s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
 /** Reddit's public RSS search works where anonymous JSON is blocked (403). */
