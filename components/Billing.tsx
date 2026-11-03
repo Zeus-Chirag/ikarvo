@@ -19,7 +19,7 @@ export default function Billing() {
     <div className="plans">
       {(info?.plans ?? []).map(p =>
         <article key={p.id} className={`card plan ${plan === p.id ? 'current' : ''}`}><div className="row between"><h3>{p.name}</h3>{plan === p.id && <span className="chip">Current</span>}</div><div className="price">{p.price}</div><p className="small muted">{p.blurb}</p><ul className="ticks">{p.perks.map(i => <li key={i}>{i}</li>)}</ul>
-          {p.id === 'pro' && (plan === 'pro' ? <button className="btn wide" disabled={busy} onClick={() => go('/api/billing/portal')}>Manage subscription</button> : <button className="btn primary wide" disabled={busy || !status.stripe.ok} onClick={() => go('/api/billing/checkout')}>{status.stripe.ok ? 'Upgrade' : 'Upgrades coming soon'}</button>)}</article>)}
+          {p.id !== 'free' && (plan === p.id ? <button className="btn wide" disabled={busy} onClick={() => go('/api/billing/portal')}>Manage subscription</button> : (status.stripe.ok ? <button className="btn primary wide" disabled={busy} onClick={() => go('/api/billing/checkout')}>Upgrade</button> : <a className="btn wide" href="/pricing">Checkout coming soon · see plans</a>))}</article>)}
     </div>
     <p className="small muted">Every AI action uses a fixed number of credits, and failed actions are refunded automatically. <a href="/app?view=settings&tab=credits">See what each action costs →</a></p>
     <ErrorNote error={error} onClose={() => setError(null)} />

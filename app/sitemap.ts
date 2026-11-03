@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: base, changeFrequency: 'weekly' as const, priority: 1 },
     { url: `${base}/app`, changeFrequency: 'weekly' as const, priority: 0.5 },
+    { url: `${base}/pricing`, changeFrequency: 'monthly' as const, priority: 0.8 },
     ...legal.map(p => ({ url: `${base}${p}`, changeFrequency: 'yearly' as const, priority: 0.2 })),
   ];
 }

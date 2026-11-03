@@ -1,4 +1,5 @@
 import { plans } from '@/lib/plans';
+import Pricing from '@/components/Pricing';
 import { appUrl, featureStatus } from '@/lib/env';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -64,10 +65,9 @@ const FEATS: [string, string, string][] = [
 ];
 
 export default function Landing() {
-  const stripe = featureStatus().stripe.ok;
   return <div className="landing"><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSONLD) }} /><LandingMotion />
     <nav className="lnav" aria-label="Main"><Link href="/" className="wordmark">Ikar<em>vo</em></Link>
-      <div className="lnav-links"><a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><ThemeToggle /><AuthCta signOut /></div></nav>
+      <div className="lnav-links"><a href="#how">Product</a><a href="#features">Features</a><Link prefetch={false} href="/pricing" className="keep">Pricing</Link><ThemeToggle /><AuthCta signOut /></div></nav>
 
     <main id="main">
     <header className="hero">
@@ -104,10 +104,9 @@ export default function Landing() {
 
     <section id="pricing" className="pricing reveal">
       <h2 className="display">Pay for what the agents do.</h2>
-      <p className="muted center">Both plans include every feature. They differ only in monthly credits. Each AI action has a fixed credit cost, and failed actions are refunded.</p>
-      <div className="plans">
-        {plans().plans.map(p => <article key={p.id} className={`card plan ${p.id === 'pro' ? 'current' : ''}`}><h3>{p.name}</h3><div className="price">{p.price}</div><p className="small muted">{p.blurb}</p><ul className="ticks">{p.perks.map(x => <li key={x}>{x}</li>)}</ul>{p.id === 'pro' && !stripe ? <span className="btn wide" aria-disabled="true">Coming soon</span> : <Link prefetch={false} className={`btn wide ${p.id === 'pro' ? 'primary' : ''}`} href={p.id === 'pro' ? '/app?view=billing' : '/app?mode=up'}>{p.id === 'pro' ? 'Upgrade' : 'Start free'}</Link>}</article>)}
-      </div>
+      <p className="muted center">Every plan includes every agent. Plans differ in monthly credits and included UGC videos; failed actions are refunded.</p>
+      <Pricing plans={plans().plans} addons={plans().addons} checkout={plans().checkout} contact={(process.env.CONTACT_EMAIL ?? '').trim()} full={false} />
+      <p className="center"><Link prefetch={false} href="/pricing" className="btn ghost">Compare plans, add-ons &amp; FAQ →</Link></p>
     </section>
 
     <section className="cta reveal"><div><h2 className="display">Ship it <em>today.</em></h2><p>Describe the product. Ikarvo builds it, deploys it and writes the launch.</p><div className="row center-row"><PrimaryCta size="lg" /><a href="#pricing" className="btn ghost lg">See pricing</a></div></div></section>
@@ -116,7 +115,7 @@ export default function Landing() {
     <footer className="lfoot"><span className="wordmark">Ikar<em>vo</em></span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, padding: '0 24px' }}>
         <nav aria-label="Footer" style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          <a href="#how">Product</a><a href="#features">Features</a><a href="#pricing">Pricing</a><AuthTextLink />
+          <a href="#how">Product</a><a href="#features">Features</a><Link prefetch={false} href="/pricing">Pricing</Link><AuthTextLink />
         </nav>
         <nav aria-label="Legal" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: 12.5 }}>
           <Link prefetch={false} href="/legal/privacy">Privacy</Link>

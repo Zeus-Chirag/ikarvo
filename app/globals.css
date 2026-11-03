@@ -921,3 +921,22 @@ html.paused .landing *,.landing .paused,.landing .paused *,.landing .paused *:be
 .auth-ok{margin:0;padding:10px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ink);font-size:13.5px;line-height:1.45}
 /* Mobile sign-in: compact brand strip so the form (and Forgot password) is above the fold */
 @media (max-width:900px){.auth-art{min-height:0;padding:18px 24px;gap:6px}.auth-art ul,.auth-art>.small{display:none}.auth-art .display{font-size:24px}.auth-art:after{display:none}.auth-card{padding:24px 22px}}
+/* Pricing */
+.pricing-page{max-width:1180px;margin:0 auto;padding:56px 20px 72px}.pricing-page header p{max-width:620px;margin:10px auto 0}
+.pricing-wrap{margin-top:28px}.pricing-wrap .center,.pricing-page .center{text-align:center}
+.cycle{display:flex;gap:4px;width:max-content;margin:0 auto 26px;padding:4px;border:1px solid var(--line,#ddd);border-radius:999px}
+.cycle button{border:0;background:none;color:inherit;font:inherit;font-size:14px;padding:8px 16px;border-radius:999px;cursor:pointer}.cycle button.on{background:var(--ink);color:var(--paper)}
+.cycle .save{font-size:11.5px;margin-left:6px;padding:2px 7px;border-radius:999px;background:var(--acc);color:#fff}
+.tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:left}
+.tier{padding:22px;position:relative;display:flex;flex-direction:column}.tier h3{margin:0;font-size:15px}
+.tier .price{font-family:var(--font-display);font-size:46px;line-height:1;margin:14px 0 4px}.tier .price small{font-size:16px;color:var(--mut)}
+.tier .bill{margin:0 0 8px}.tier .btn{margin:12px 0 6px}.tier.popular{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.tier .badge{position:absolute;top:-11px;right:16px;font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--paper)}
+.addons{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.addon{padding:18px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.addon p{margin:4px 0 0}
+.addon-price{font-family:var(--font-display);font-size:28px;white-space:nowrap}.addon-price small{font-size:12px;color:var(--mut)}
+.cmp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.cmp{width:100%;min-width:640px;border-collapse:collapse;font-size:14px}
+.cmp th,.cmp td{padding:11px 12px;border-bottom:1px solid var(--line,#e5e5e5);text-align:center}.cmp th[scope=row],.cmp thead th:first-child{text-align:left;font-weight:500}
+.cmp .pop{background:color-mix(in srgb,var(--acc) 7%,transparent)}.cmp .yes{color:var(--acc);font-weight:700}.cmp .no{color:var(--mut)}
+.faq{display:grid;gap:10px;max-width:760px;margin:0 auto}.faq details{padding:14px 18px}.faq summary{cursor:pointer;font-weight:500}.faq p{margin:10px 0 0}
+@media (max-width:980px){.tiers{grid-template-columns:1fr 1fr}.addons{grid-template-columns:1fr}}
+@media (max-width:620px){.tiers{grid-template-columns:1fr}.pricing-page{padding:36px 16px 56px}.lnav-links a.keep{display:inline}}
