@@ -919,3 +919,5 @@ html.paused .landing *,.landing .paused,.landing .paused *,.landing .paused *:be
 .auth-forgot{display:flex;justify-content:flex-end;margin:-6px 0 2px}.auth-forgot .link{font-size:13.5px;font-weight:600;color:var(--acc-ink)}
 .auth-or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:2px 0}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:var(--line)}
 .auth-ok{margin:0;padding:10px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ink);font-size:13.5px;line-height:1.45}
+/* Mobile sign-in: compact brand strip so the form (and Forgot password) is above the fold */
+@media (max-width:900px){.auth-art{min-height:0;padding:18px 24px;gap:6px}.auth-art ul,.auth-art>.small{display:none}.auth-art .display{font-size:24px}.auth-art:after{display:none}.auth-card{padding:24px 22px}}
