@@ -13,16 +13,16 @@ export async function webSearch(q: string, n = 10): Promise<Hit[]> {
     const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(`Serper ${r.status}: ${d?.message ?? ''}`);
     return (d.organic ?? []).map((x: { title: string; link: string; snippet: string }) => ({ title: x.title, url: x.link, snippet: x.snippet ?? '' }));
   }
-  return bingRss(q, n);
+  return braveHtml(q, n);
 }
 const ent = (s: string) => s.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d))).replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
-/** Free, keyless fallback: Bing's public RSS results feed. */
-async function bingRss(q: string, n: number): Promise<Hit[]> {
-  const r = await fetch(`https://www.bing.com/search?format=rss&count=${Math.min(n, 30)}&setlang=en&cc=US&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'Accept-Language': 'en-US,en' }, cache: 'no-store', signal: AbortSignal.timeout(12000) });
-  if (!r.ok) throw new Error(`Web search is busy right now (HTTP ${r.status}). Try again in a minute.`);
-  const xml = await r.text();
-  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => ({ title: ent(m[1].match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? ''), url: ent(m[1].match(/<link>([\s\S]*?)<\/link>/)?.[1] ?? ''), snippet: ent(m[1].match(/<description>([\s\S]*?)<\/description>/)?.[1] ?? '') }))
-    .filter(h => /^https?:\/\//.test(h.url) && !/^https?:\/\/(www\.)?bing\.com/.test(h.url)).slice(0, n);
+/** Free, keyless fallback: Brave Search's public results page. */
+async function braveHtml(q: string, n: number): Promise<Hit[]> {
+  const r = await fetch(`https://search.brave.com/search?source=web&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9', Accept: 'text/html' }, cache: 'no-store', signal: AbortSignal.timeout(12000) });
+  if (!r.ok) throw new Error(`Web search is busy right now (HTTP ${r.status}). Try again in a minute, or add BRAVE_SEARCH_API_KEY.`);
+  const html = await r.text();
+  return html.split(/<div class="snippet [^"]*" data-pos="\d+" data-type="web"/).slice(1).map(b => ({ url: ent(b.match(/<a href="(https?:\/\/[^"]+)"/)?.[1] ?? ''), title: ent(b.match(/<div class="title[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1] ?? ''), snippet: ent(b.match(/<div class="content[^"]*"[^>]*>([\s\S]*?)<\/div>/)?.[1] ?? '') }))
+    .filter(h => h.url && h.title && !/^https?:\/\/([a-z]+\.)?brave\.com/.test(h.url)).slice(0, n);
 }
 /** Which engine webSearch will use (for labels). */
-export const searchSource = () => v('BRAVE_SEARCH_API_KEY') ? 'brave' : v('SERPER_API_KEY') ? 'serper' : 'bing';
+export const searchSource = () => v('BRAVE_SEARCH_API_KEY') ? 'brave' : v('SERPER_API_KEY') ? 'serper' : 'brave-web';
