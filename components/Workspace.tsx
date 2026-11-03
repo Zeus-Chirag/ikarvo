@@ -87,7 +87,10 @@ function AuthForm() {
     const sb = createClient(); const redirect = `${location.origin}/auth/callback?next=${encodeURIComponent(mode === 'reset' ? '/app?reset=1' : '/app')}`;
     try {
       if (mode === 'reset') { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect }); if (error) throw error; setMsg('If that address has an account, a reset link is on its way.'); }
-      else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error; if (!data.session) setMsg(`Almost there. We sent a confirmation link to ${email}. Open it to activate your account.`); else location.href = '/app'; }
+      else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error;
+        // Supabase returns a fake success (no identities, no email sent) when the address is already registered.
+        if (!data.session && data.user && (data.user.identities?.length ?? 0) === 0) throw new Error('An account with this email already exists. Sign in instead, or use “Forgot password?” to reset it.');
+        if (!data.session) setMsg(`Almost there. We sent a confirmation link to ${email}. Open it to activate your account.`); else location.href = '/app'; }
       else { const { error } = await sb.auth.signInWithPassword({ email, password: pw });
         if (error) throw new Error(/confirm/i.test(error.message) ? 'Please confirm your email first. Check your inbox for the link.' : /invalid/i.test(error.message) ? 'That email and password don’t match. Try again or reset your password.' : error.message);
         location.href = '/app'; }
