@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { requireActor, consumeQuota } from '@/lib/auth';
 import { chat, AiError } from '@/lib/ai';
 import { envValue } from '@/lib/env';
+import { webSearch } from '@/lib/search';
 import { fail, readJson, str } from '@/lib/http';
 export const runtime = 'nodejs';
 export const maxDuration = 180;
@@ -19,8 +20,15 @@ async function grounded(prompt: string, model: string): Promise<Answer> {
     return { content: d.choices?.[0]?.message?.content ?? '', citations: d.citations ?? (d.search_results ?? []).map((s: { url: string }) => s.url), engine: `perplexity/${m}` };
   }
   const base = (envValue('AI_BASE_URL') || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
-  if (!base.includes('openrouter.ai')) throw new AiError('Search-grounded AI visibility checks are coming soon.', 503);
   if (!envValue('AI_API_KEY')) throw new AiError('AI generation is coming soon.', 503);
+  if (!base.includes('openrouter.ai')) {
+    // Free path: live web results (lib/search) fed to the model, like an answer engine does.
+    const hits = await webSearch(prompt, 10).catch(() => []);
+    const ctx = hits.map((h, i) => `[${i + 1}] ${h.title} | ${h.url}\n${h.snippet}`).join('\n\n').slice(0, 7000);
+    const a = await chat({ system: `${SYS} Base your answer on the WEB RESULTS and cite sources inline as [n].`, user: `${prompt}\n\nWEB RESULTS:\n${ctx || '(none)'}`, temperature: 0.2, maxTokens: 900, model });
+    const used = new Set([...a.content.matchAll(/\[(\d+)\]/g)].map(m => Number(m[1]) - 1));
+    return { content: a.content, citations: hits.filter((_, i) => used.has(i)).map(h => h.url).concat(used.size ? [] : hits.slice(0, 5).map(h => h.url)), engine: `${a.model}+web` };
+  }
   const r = await fetch(`${base}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${envValue('AI_API_KEY')}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: `${model.replace(/:online$/, '')}:online`, max_tokens: 900, messages: [{ role: 'system', content: SYS }, { role: 'user', content: prompt }] }), signal: AbortSignal.timeout(90000) });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw new AiError(`OpenRouter error (${r.status}): ${d?.error?.message ?? ''}`);
   const msg = d.choices?.[0]?.message ?? {};
