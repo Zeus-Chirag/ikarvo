@@ -7,7 +7,7 @@ const day = 86400;
 const decode = (s: string) => s.replace(/<[^>]+>/g, ' ').replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d))).replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
 
 export async function hn(q: string, days: number): Promise<Thread[]> {
-  const u = `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(q)}&tags=(story,ask_hn,show_hn)&numericFilters=created_at_i>${Math.floor(Date.now() / 1000) - days * day}&hitsPerPage=20`;
+  const u = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(q)}&tags=(story,ask_hn,show_hn)&numericFilters=created_at_i>${Math.floor(Date.now() / 1000) - days * day}&hitsPerPage=20`;
   const r = await fetch(u, { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error(`HN search HTTP ${r.status}`);
   const d = await r.json();
   return (d.hits ?? []).map((h: Record<string, unknown>) => ({ id: `hn:${h.objectID}`, source: 'hackernews', community: 'Hacker News', title: decode(String(h.title ?? h.story_title ?? '')), text: decode(String(h.story_text ?? '')).slice(0, 1500),
