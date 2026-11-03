@@ -26,7 +26,7 @@ async function ddgHtml(q: string, n: number): Promise<Hit[]> {
     return { url, title: ent(b.match(/>([\s\S]*?)<\/a>/)?.[1] ?? ''), snippet: ent(b.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/)?.[1] ?? '') }; })
     .filter(h => /^https?:\/\//.test(h.url) && !/duckduckgo\.com\/y\.js/.test(h.url)).slice(0, n);
 }
-const ent = (s: string) => s.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d))).replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
+const ent = (s: string) => s.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d))).replace(/&quot;/g, '"').replace(/&apos;|&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
 /** Free, keyless fallback: Brave Search's public results page. */
 async function braveHtml(q: string, n: number): Promise<Hit[]> {
   const r = await fetch(`https://search.brave.com/search?source=web&q=${encodeURIComponent(q)}`, { headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', 'Accept-Language': 'en-US,en;q=0.9', Accept: 'text/html' }, cache: 'no-store', signal: AbortSignal.timeout(12000) });
