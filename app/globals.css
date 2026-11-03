@@ -914,3 +914,8 @@ html.gsap-on .hero-frame { transform: translateZ(0); }
 html.paused .landing *,.landing .paused,.landing .paused *,.landing .paused *:before,.landing .paused *:after{animation-play-state:paused!important}
 .hero-frame,.marquee,.vig{contain:layout paint}
 .marquee>div{will-change:transform}
+
+/* Sign-in: visible forgot-password link, divider, success message */
+.auth-forgot{display:flex;justify-content:flex-end;margin:-6px 0 2px}.auth-forgot .link{font-size:13.5px;font-weight:600;color:var(--acc-ink)}
+.auth-or{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:12px;margin:2px 0}.auth-or:before,.auth-or:after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-ok{margin:0;padding:10px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ink);font-size:13.5px;line-height:1.45}

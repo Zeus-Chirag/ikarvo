@@ -78,15 +78,16 @@ function Boot() {
 }
 
 function AuthForm() {
-  const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in'); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
+  const [mode, setMode] = useState<'in' | 'up' | 'reset' | 'magic'>('in'); const [email, setEmail] = useState(''); const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false); const [msg, setMsg] = useState(''); const [error, setError] = useState<unknown>(null);
-  useEffect(() => { const q = new URLSearchParams(location.search); const m = q.get('mode'); if (m === 'up' || m === 'signup') setMode('up'); else if (m === 'reset') setMode('reset');
+  useEffect(() => { const q = new URLSearchParams(location.search); const m = q.get('mode'); if (m === 'up' || m === 'signup') setMode('up'); else if (m === 'reset' || m === 'forgot') setMode('reset'); else if (m === 'magic') setMode('magic');
     if (q.get('authError')) setError(new Error('That link has expired or was already used. If you just confirmed your email, sign in below. Otherwise, request a new link.')); }, []);
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null); setMsg('');
     const sb = createClient(); const redirect = `${location.origin}/auth/callback?next=${encodeURIComponent(mode === 'reset' ? '/app?reset=1' : '/app')}`;
     try {
-      if (mode === 'reset') { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect }); if (error) throw error; setMsg('If that address has an account, a reset link is on its way.'); }
+      if (mode === 'reset') { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect }); if (error) throw error; setMsg(`Check your inbox. If ${email} has an account, we just sent a password reset link. Open it in this browser to choose a new password.`); }
+      else if (mode === 'magic') { const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: false } }); if (error && !/signups? not allowed|not found/i.test(error.message)) throw error; setMsg(`Check your inbox. If ${email} has an account, we just sent a sign-in link. Open it in this browser.`); }
       else if (mode === 'up') { const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: redirect } }); if (error) throw error;
         // Supabase returns a fake success (no identities, no email sent) when the address is already registered.
         if (!data.session && data.user && (data.user.identities?.length ?? 0) === 0) throw new Error('An account with this email already exists. Sign in instead, or use “Forgot password?” to reset it.');
@@ -97,13 +98,14 @@ function AuthForm() {
     } catch (err) { setError(err); } finally { setBusy(false); }
   }
   return <div className="auth"><div className="auth-art"><Link href="/" className="wordmark lg">Ikar<em>vo</em></Link><div><p className="display">Build it, ship it, sell it. From one brief.</p><ul><li><b>01</b>Prompt to a working app, live in minutes</li><li><b>02</b>Push to GitHub, deploy to Vercel</li><li><b>03</b>UGC and motion ads, Meta campaigns</li><li><b>04</b>An AI CMO that writes the launch</li></ul></div><span className="small" style={{ color: '#9f988a', position: 'relative', zIndex: 1 }}>© Ikarvo</span></div>
-    <form className="auth-card" onSubmit={submit}><h1>{mode === 'up' ? 'Create your account' : mode === 'reset' ? 'Reset password' : 'Welcome back'}</h1><p className="auth-sub">{mode === 'up' ? 'Free to start. No card needed.' : mode === 'reset' ? 'We’ll email you a secure link.' : 'Sign in to your workspace.'}</p>
+    <form className="auth-card" onSubmit={submit}><h1>{mode === 'up' ? 'Create your account' : mode === 'reset' ? 'Reset your password' : mode === 'magic' ? 'Sign in with a link' : 'Welcome back'}</h1><p className="auth-sub">{mode === 'up' ? 'Free to start. No card needed.' : mode === 'reset' ? 'Enter your email and we’ll send you a link to set a new password.' : mode === 'magic' ? 'Enter your email and we’ll send you a one-time sign-in link.' : 'Sign in to your workspace.'}</p>
       <label className="label">Email<input className="input" type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
-      {mode !== 'reset' && <label className="label">Password<input className="input" type="password" required minLength={8} placeholder={mode === 'up' ? 'At least 8 characters' : undefined} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} /></label>}
-      <button className="btn primary wide" disabled={busy}>{busy ? <><span className="spin" aria-hidden />One moment…</> : mode === 'up' ? 'Create account' : mode === 'reset' ? 'Send reset link' : 'Sign in'}</button>
-      {msg && <p className="small ok-text">{msg}</p>}<ErrorNote error={error} />
-      <div className="row between small"><button type="button" className="link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); setError(null); }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</button>
-        {mode === 'in' && <button type="button" className="link" onClick={() => { setMode('reset'); setMsg(''); setError(null); }}>Forgot password?</button>}</div>
+      {(mode === 'in' || mode === 'up') && <label className="label">Password<input className="input" type="password" required minLength={8} placeholder={mode === 'up' ? 'At least 8 characters' : undefined} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} /></label>}
+      {mode === 'in' && <div className="auth-forgot"><button type="button" className="link" onClick={() => { setMode('reset'); setMsg(''); setError(null); }}>Forgot password?</button></div>}
+      <button className="btn primary wide" disabled={busy}>{busy ? <><span className="spin" aria-hidden />One moment…</> : mode === 'up' ? 'Create account' : mode === 'reset' ? 'Send reset link' : mode === 'magic' ? 'Email me a sign-in link' : 'Sign in'}</button>
+      {mode === 'in' && <><div className="auth-or" aria-hidden><span>or</span></div><button type="button" className="btn wide" onClick={() => { setMode('magic'); setMsg(''); setError(null); }}>Email me a sign-in link</button></>}
+      {msg && <p className="auth-ok" role="status">{msg}</p>}<ErrorNote error={error} />
+      <div className="row between small"><button type="button" className="link" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setMsg(''); setError(null); }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</button></div>
       <p className="small muted" style={{ marginTop: 12, lineHeight: 1.5 }}>By continuing you agree to Ikarvo&rsquo;s <Link href="/legal/terms">Terms of Use</Link> and <Link href="/legal/privacy">Privacy Policy</Link>.</p>
     </form></div>;
 }
